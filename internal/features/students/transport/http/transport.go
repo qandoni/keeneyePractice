@@ -30,6 +30,11 @@ type StudentsService interface {
 		ctx context.Context,
 		id int,
 	) error
+	GetStudents(
+		ctx context.Context,
+		limit *int,
+		offset *int,
+	) ([]domain.Student, error)
 }
 
 func NewStudentsHTTPHandler(
@@ -61,6 +66,11 @@ func (h *StudentsHTTPHandler) Routes() []core_http_server.Route {
 			Method:  http.MethodDelete,
 			Path:    "/students/{id}",
 			Handler: h.DeleteStudent,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/students",
+			Handler: h.GetStudents,
 		},
 	}
 }

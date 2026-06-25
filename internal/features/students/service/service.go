@@ -28,6 +28,11 @@ type StudentsRepository interface {
 		ctx context.Context,
 		id int,
 	) error
+	GetStudents(
+		ctx context.Context,
+		limit *int,
+		offset *int,
+	) ([]domain.Student, error)
 }
 
 func NewStudentsService(

@@ -19,3 +19,11 @@ func studentDTOFromDomain(student domain.Student) StudentDTOResponse {
 		PhoneNumber:  student.PhoneNumber,
 	}
 }
+
+func studentsDTOFromDomains(students []domain.Student) []StudentDTOResponse {
+	studentsDTO := make([]StudentDTOResponse, len(students))
+	for i, student := range students {
+		studentsDTO[i] = studentDTOFromDomain(student)
+	}
+	return studentsDTO
+}
