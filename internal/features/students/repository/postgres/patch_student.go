@@ -22,22 +22,21 @@ func (r *StudentsRepository) PatchStudent(
 	UPDATE myapp.students
 	SET
 		fio=$1,
-		student_group=$2,
-		phone_number=$3,
+		phone_number=$2,
 		version=version+1
-	WHERE id=$4 AND version=$5
+	WHERE id=$3 AND version=$4
 	RETURNING
 		id,
 		version,
+		user_id,
+		group_id,
 		fio,
-		student_group,
 		phone_number;
 	`
 	row := r.pool.QueryRow(
 		ctx,
 		query,
 		student.FIO,
-		student.StudentGroup,
 		student.PhoneNumber,
 		id,
 		student.Version,
@@ -47,8 +46,9 @@ func (r *StudentsRepository) PatchStudent(
 	err := row.Scan(
 		&studentModel.ID,
 		&studentModel.Version,
+		&studentModel.UserID,
+		&studentModel.GroupID,
 		&studentModel.FIO,
-		&studentModel.StudentGroup,
 		&studentModel.PhoneNumber,
 	)
 	if err != nil {
@@ -62,11 +62,12 @@ func (r *StudentsRepository) PatchStudent(
 		return domain.Student{}, fmt.Errorf("scan error: %w", err)
 	}
 	studentDomain := domain.NewStudent(
-		student.ID,
-		student.Version,
-		student.FIO,
-		student.StudentGroup,
-		student.PhoneNumber,
+		studentModel.ID,
+		studentModel.Version,
+		studentModel.UserID,
+		studentModel.GroupID,
+		studentModel.FIO,
+		studentModel.PhoneNumber,
 	)
 	return studentDomain, nil
 }

@@ -3,8 +3,8 @@ package core_http_request
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	core_errors "github.com/qandoni/keeneyePractice/internal/core/errors"
 )
@@ -19,8 +19,8 @@ var (
 	err error
 )
 
-func DecodeAndValidateRequest(r *http.Request, dest any) error {
-	if err := json.NewDecoder(r.Body).Decode(dest); err != nil {
+func DecodeAndValidateRequest(c *gin.Context, dest any) error {
+	if err := json.NewDecoder(c.Request.Body).Decode(dest); err != nil {
 		return fmt.Errorf("decode json: %v: %w", err, core_errors.ErrInvalidArgument)
 	}
 

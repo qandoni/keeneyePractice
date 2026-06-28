@@ -16,7 +16,7 @@ func (r *StudentsRepository) GetStudents(
 	defer cancel()
 
 	query := `
-	SELECT id, version, fio, student_group, phone_number
+	SELECT id, version, user_id, group_id, fio, phone_number
 	FROM myapp.students
 	ORDER BY id ASC
 	LIMIT $1
@@ -41,8 +41,9 @@ func (r *StudentsRepository) GetStudents(
 		err := rows.Scan(
 			&studentModel.ID,
 			&studentModel.Version,
+			&studentModel.UserID,
+			&studentModel.GroupID,
 			&studentModel.FIO,
-			&studentModel.StudentGroup,
 			&studentModel.PhoneNumber,
 		)
 		if err != nil {

@@ -18,7 +18,7 @@ func (r *StudentsRepository) GetStudent(
 	defer cancel()
 
 	query := `
-	SELECT id, version, fio, student_group, phone_number
+	SELECT id, version, user_id, group_id, fio, phone_number
 	FROM myapp.students
 	WHERE id=$1;
 	`
@@ -29,8 +29,9 @@ func (r *StudentsRepository) GetStudent(
 	err := row.Scan(
 		&studentModel.ID,
 		&studentModel.Version,
+		&studentModel.UserID,
+		&studentModel.GroupID,
 		&studentModel.FIO,
-		&studentModel.StudentGroup,
 		&studentModel.PhoneNumber,
 	)
 	if err != nil {
@@ -43,8 +44,9 @@ func (r *StudentsRepository) GetStudent(
 	studentDomain := domain.NewStudent(
 		studentModel.ID,
 		studentModel.Version,
+		studentModel.UserID,
+		studentModel.GroupID,
 		studentModel.FIO,
-		studentModel.StudentGroup,
 		studentModel.PhoneNumber,
 	)
 	return studentDomain, nil

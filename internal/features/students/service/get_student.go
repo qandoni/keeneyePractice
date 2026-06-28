@@ -4,16 +4,29 @@ import (
 	"context"
 	"fmt"
 
+	core_auth "github.com/qandoni/keeneyePractice/internal/core/auth"
 	"github.com/qandoni/keeneyePractice/internal/core/domain"
+	core_errors "github.com/qandoni/keeneyePractice/internal/core/errors"
 )
 
 func (s *StudentsService) GetStudent(
 	ctx context.Context,
-	id int,
+	studentID int,
 ) (domain.Student, error) {
-	student, err := s.studentsRepository.GetStudent(ctx, id)
-	if err != nil {
-		return domain.Student{}, fmt.Errorf("get user from repository: %w", err)
+
+	auth, ok := core_auth.AuthInfoFromContext(ctx)
+	if !ok {
+		return domain.Student{}, core_errors.ErrUnauthorized
 	}
+
+	if err := s.policy.CanGetStudent(ctx, auth, studentID); err != nil {
+		return domain.Student{}, err
+	}
+
+	student, err := s.studentsRepository.GetStudent(ctx, studentID)
+	if err != nil {
+		return domain.Student{}, fmt.Errorf("get student: %w", err)
+	}
+
 	return student, nil
 }

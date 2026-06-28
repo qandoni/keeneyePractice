@@ -2,10 +2,9 @@ package students_transport_http
 
 import (
 	"context"
-	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/qandoni/keeneyePractice/internal/core/domain"
-	core_http_server "github.com/qandoni/keeneyePractice/internal/core/transport/http/server"
 )
 
 type StudentsHTTPHandler struct {
@@ -45,32 +44,11 @@ func NewStudentsHTTPHandler(
 	}
 }
 
-func (h *StudentsHTTPHandler) Routes() []core_http_server.Route {
-	return []core_http_server.Route{
-		{
-			Method:  http.MethodPost,
-			Path:    "/students",
-			Handler: h.CreateStudent,
-		},
-		{
-			Method:  http.MethodGet,
-			Path:    "/students/{id}",
-			Handler: h.GetStudent,
-		},
-		{
-			Method:  http.MethodPatch,
-			Path:    "/students/{id}",
-			Handler: h.PatchStudent,
-		},
-		{
-			Method:  http.MethodDelete,
-			Path:    "/students/{id}",
-			Handler: h.DeleteStudent,
-		},
-		{
-			Method:  http.MethodGet,
-			Path:    "/students",
-			Handler: h.GetStudents,
-		},
-	}
+func (h *StudentsHTTPHandler) Register(rg *gin.RouterGroup) {
+	students := rg.Group("")
+
+	students.GET("", h.GetStudents)
+	students.GET("/:id", h.GetStudent)
+
+	students.PATCH("/:id", h.PatchStudent)
 }

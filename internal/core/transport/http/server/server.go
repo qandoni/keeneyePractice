@@ -3,96 +3,64 @@ package core_http_server
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	core_logger "github.com/qandoni/keeneyePractice/internal/core/logger"
-	core_http_middleware "github.com/qandoni/keeneyePractice/internal/core/transport/http/middleware"
 	"go.uber.org/zap"
 )
 
 type HTTPServer struct {
-	mux        *http.ServeMux
-	config     Config
-	log        *core_logger.Logger
-	middleware []core_http_middleware.Middleware
+	engine *gin.Engine
+	config Config
+	log    *core_logger.Logger
 }
 
 func NewHTTPServer(
 	config Config,
 	log *core_logger.Logger,
-	middleware ...core_http_middleware.Middleware,
 ) *HTTPServer {
+	engine := gin.New()
+
 	return &HTTPServer{
-		mux:        http.NewServeMux(),
-		config:     config,
-		log:        log,
-		middleware: middleware,
+		engine: engine,
+		config: config,
+		log:    log,
 	}
 }
 
-func (s *HTTPServer) RegisterRoutes(routes ...Route) {
-	for _, route := range routes {
-		pattern := fmt.Sprintf("%s %s", route.Method, route.Path)
-
-		s.mux.Handle(pattern, route.WithMiddleware())
-	}
-}
-
-func (s *HTTPServer) RegisterAPIRouters(routers ...*APIVersionRouter) {
-	for _, router := range routers {
-		prefix := "/api/" + string(router.apiVersion)
-
-		s.mux.Handle(
-			prefix+"/",
-			http.StripPrefix(prefix, router.WithMiddleware()),
-		)
-	}
+func (s *HTTPServer) Engine() *gin.Engine {
+	return s.engine
 }
 
 func (s *HTTPServer) Run(ctx context.Context) error {
-	mux := core_http_middleware.ChainMiddleware(s.mux, s.middleware...)
-
 	server := &http.Server{
 		Addr:    s.config.Addr,
-		Handler: mux,
+		Handler: s.engine,
 	}
 
 	ch := make(chan error, 1)
 
 	go func() {
-		defer close(ch)
-
-		s.log.Warn("start HTTP server", zap.String("addr", s.config.Addr))
-
-		err := server.ListenAndServe()
-
-		if !errors.Is(err, http.ErrServerClosed) {
+		s.log.Info("start HTTP server",
+			zap.String("addr", s.config.Addr))
+		if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			ch <- err
 		}
+		close(ch)
 	}()
 
 	select {
 	case err := <-ch:
-		if err != nil {
-			return fmt.Errorf("listen and server http: %w", err)
-		}
-
+		return err
 	case <-ctx.Done():
-		s.log.Warn("shutdown http server...")
-
+		s.log.Info("shutdown http server...")
 		shutdownCtx, cancel := context.WithTimeout(
 			context.Background(),
 			s.config.ShutdownTimeout,
 		)
 		defer cancel()
 
-		if err := server.Shutdown(shutdownCtx); err != nil {
-			_ = server.Close()
-
-			return fmt.Errorf("shutdown HTTP server: %w", err)
-		}
-		s.log.Warn("HTTP server stopped")
+		return server.Shutdown(shutdownCtx)
 	}
-	return nil
 }

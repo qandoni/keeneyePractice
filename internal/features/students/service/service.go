@@ -4,10 +4,12 @@ import (
 	"context"
 
 	"github.com/qandoni/keeneyePractice/internal/core/domain"
+	student_policy "github.com/qandoni/keeneyePractice/internal/features/students/policy"
 )
 
 type StudentsService struct {
 	studentsRepository StudentsRepository
+	policy             student_policy.StudentAccessPolicy
 }
 
 type StudentsRepository interface {
@@ -33,12 +35,24 @@ type StudentsRepository interface {
 		limit *int,
 		offset *int,
 	) ([]domain.Student, error)
+	GetStudentsByGroupIDs(
+		ctx context.Context,
+		groupIDs []int,
+		limit *int,
+		offset *int,
+	) ([]domain.Student, error)
+	GetStudentByUserID(
+		ctx context.Context,
+		userID int,
+	) (domain.Student, error)
 }
 
 func NewStudentsService(
 	studentsRepository StudentsRepository,
+	studentPolicy *student_policy.StudentAccessPolicy,
 ) *StudentsService {
 	return &StudentsService{
 		studentsRepository: studentsRepository,
+		policy:             *studentPolicy,
 	}
 }

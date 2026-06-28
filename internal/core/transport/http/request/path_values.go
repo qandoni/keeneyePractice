@@ -2,14 +2,14 @@ package core_http_request
 
 import (
 	"fmt"
-	"net/http"
 	"strconv"
 
+	"github.com/gin-gonic/gin"
 	core_errors "github.com/qandoni/keeneyePractice/internal/core/errors"
 )
 
-func GetIntPathValue(r *http.Request, key string) (int, error) {
-	pathValue := r.PathValue(key)
+func GetIntPathValue(c *gin.Context, key string) (int, error) {
+	pathValue := c.Param(key)
 	if pathValue == "" {
 		return 0, fmt.Errorf(
 			"no key='%s' in path values: %w",

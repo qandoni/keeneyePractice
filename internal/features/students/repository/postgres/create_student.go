@@ -14,20 +14,25 @@ func (r *StudentsRepository) CreateStudent(
 	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
 	defer cancel()
 	query := `
-	INSERT INTO myapp.students (fio, student_group, phone_number)
-	VALUES ($1, $2, $3)
-	RETURNING id, version, fio, student_group, phone_number;
+	INSERT INTO myapp.students (user_id, group_id, fio, phone_number)
+	VALUES ($1, $2, $3, $4)
+	RETURNING id, version, user_id, group_id, fio, phone_number;
 	`
 
-	row := r.pool.QueryRow(ctx, query, student.FIO, student.StudentGroup, student.PhoneNumber)
+	row := r.pool.QueryRow(ctx, query,
+		student.UserID,
+		student.GroupID,
+		student.FIO,
+		student.PhoneNumber)
 
 	var studentModel StudentModel
 
 	err := row.Scan(
 		&studentModel.ID,
 		&studentModel.Version,
+		&studentModel.UserID,
+		&studentModel.GroupID,
 		&studentModel.FIO,
-		&studentModel.StudentGroup,
 		&studentModel.PhoneNumber,
 	)
 	if err != nil {
@@ -37,8 +42,9 @@ func (r *StudentsRepository) CreateStudent(
 	studentDomain := domain.NewStudent(
 		studentModel.ID,
 		studentModel.Version,
+		studentModel.UserID,
+		studentModel.GroupID,
 		studentModel.FIO,
-		studentModel.StudentGroup,
 		studentModel.PhoneNumber,
 	)
 	return studentDomain, nil
