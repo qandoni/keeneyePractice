@@ -1,32 +1,32 @@
 package students_transport_http
 
 import (
-	"fmt"
 	"net/http"
 
-	core_logger "github.com/qandoni/keeneyePractice/internal/core/logger"
+	"github.com/gin-gonic/gin"
 	core_http_request "github.com/qandoni/keeneyePractice/internal/core/transport/http/request"
 	core_http_response "github.com/qandoni/keeneyePractice/internal/core/transport/http/response"
 )
 
 type GetStudentsResponse []StudentDTOResponse
 
-func (h *StudentsHTTPHandler) GetStudents(rw http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	log := core_logger.FromContext(ctx)
-	responseHandler := core_http_response.NewHTTPResponseHandler(log, rw)
+func (h *StudentsHTTPHandler) GetStudents(c *gin.Context) {
+	ctx := c.Request.Context()
 
-	limit, offset, err := getLimitOffsetQueryParams(r)
+	limit, offset, err := core_http_request.GetLimitOffsetQueryParams(c)
 	if err != nil {
-		responseHandler.ErrorResponse(
+		core_http_response.RespondError(
+			c,
 			err,
-			"failed to get 'limit'/'offset' query param")
+			"failed to get 'limit'/'offset' query params",
+		)
 		return
 	}
 
 	studentDomains, err := h.studentsService.GetStudents(ctx, limit, offset)
 	if err != nil {
-		responseHandler.ErrorResponse(
+		core_http_response.RespondError(
+			c,
 			err,
 			"failed to get students",
 		)
@@ -34,23 +34,6 @@ func (h *StudentsHTTPHandler) GetStudents(rw http.ResponseWriter, r *http.Reques
 	}
 	response := GetStudentsResponse(studentsDTOFromDomains(studentDomains))
 
-	responseHandler.JSONResponse(response, http.StatusOK)
+	c.JSON(http.StatusOK, response)
 
-}
-
-func getLimitOffsetQueryParams(r *http.Request) (*int, *int, error) {
-	const (
-		limitQueryParamKey  = "limit"
-		offsetQueryParamKey = "offset"
-	)
-	limit, err := core_http_request.GetIntQueryParam(r, limitQueryParamKey)
-	if err != nil {
-		return nil, nil, fmt.Errorf("get 'limit' query param: %w", err)
-	}
-
-	offset, err := core_http_request.GetIntQueryParam(r, offsetQueryParamKey)
-	if err != nil {
-		return nil, nil, fmt.Errorf("get 'offset' query param: %w", err)
-	}
-	return limit, offset, nil
 }

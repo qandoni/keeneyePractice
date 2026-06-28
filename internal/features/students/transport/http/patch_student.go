@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/qandoni/keeneyePractice/internal/core/domain"
-	core_logger "github.com/qandoni/keeneyePractice/internal/core/logger"
 	core_http_request "github.com/qandoni/keeneyePractice/internal/core/transport/http/request"
 	core_http_response "github.com/qandoni/keeneyePractice/internal/core/transport/http/response"
 	core_http_types "github.com/qandoni/keeneyePractice/internal/core/transport/http/types"
@@ -44,25 +44,25 @@ func (r *PatchStudentRequest) Validate() error {
 
 type PatchStudentResponse StudentDTOResponse
 
-func (h *StudentsHTTPHandler) PatchStudent(rw http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	log := core_logger.FromContext(ctx)
-	responseHandler := core_http_response.NewHTTPResponseHandler(log, rw)
+func (h *StudentsHTTPHandler) PatchStudent(c *gin.Context) {
+	ctx := c.Request.Context()
 
-	studentID, err := core_http_request.GetIntPathValue(r, "id")
+	studentID, err := core_http_request.GetIntPathValue(c, "id")
 	if err != nil {
-		responseHandler.ErrorResponse(
+		core_http_response.RespondError(
+			c,
 			err,
-			"failed to get userID path value",
+			"failed to get int path value",
 		)
 		return
 	}
 	var request PatchStudentRequest
 
-	if err := core_http_request.DecodeAndValidateRequest(r, &request); err != nil {
-		responseHandler.ErrorResponse(
+	if err := core_http_request.DecodeAndValidateRequest(c, &request); err != nil {
+		core_http_response.RespondError(
+			c,
 			err,
-			"failed to decode and validate HTP request",
+			"failed to decode and validate HTTP request",
 		)
 		return
 	}
@@ -71,7 +71,8 @@ func (h *StudentsHTTPHandler) PatchStudent(rw http.ResponseWriter, r *http.Reque
 
 	studentDomain, err := h.studentsService.PatchStudent(ctx, studentID, studentPatch)
 	if err != nil {
-		responseHandler.ErrorResponse(
+		core_http_response.RespondError(
+			c,
 			err,
 			"failed to patch student",
 		)
@@ -79,13 +80,12 @@ func (h *StudentsHTTPHandler) PatchStudent(rw http.ResponseWriter, r *http.Reque
 	}
 	response := PatchStudentResponse(studentDTOFromDomain(studentDomain))
 
-	responseHandler.JSONResponse(response, http.StatusOK)
+	c.JSON(http.StatusOK, response)
 }
 
 func studentPatchFromRequest(request PatchStudentRequest) domain.StudentPatch {
 	return domain.NewStudentPatch(
 		request.FIO.ToDomain(),
-		request.StudentGroup.ToDomain(),
 		request.PhoneNumber.ToDomain(),
 	)
 }

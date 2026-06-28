@@ -3,35 +3,36 @@ package students_transport_http
 import (
 	"net/http"
 
-	core_logger "github.com/qandoni/keeneyePractice/internal/core/logger"
+	"github.com/gin-gonic/gin"
 	core_http_request "github.com/qandoni/keeneyePractice/internal/core/transport/http/request"
 	core_http_response "github.com/qandoni/keeneyePractice/internal/core/transport/http/response"
 )
 
 type GetStudentResponse StudentDTOResponse
 
-func (h *StudentsHTTPHandler) GetStudent(rw http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	log := core_logger.FromContext(ctx)
+func (h *StudentsHTTPHandler) GetStudent(c *gin.Context) {
+	ctx := c.Request.Context()
 
-	responseHandler := core_http_response.NewHTTPResponseHandler(log, rw)
-
-	studentID, err := core_http_request.GetIntPathValue(r, "id")
+	studentID, err := core_http_request.GetIntPathValue(c, "id")
 	if err != nil {
-		responseHandler.ErrorResponse(
+		core_http_response.RespondError(
+			c,
 			err,
-			"failed to get studentID path value",
+			"failed to get 'studentID' path value",
 		)
 		return
 	}
 	student, err := h.studentsService.GetStudent(ctx, studentID)
 	if err != nil {
-		responseHandler.ErrorResponse(
+		core_http_response.RespondError(
+			c,
 			err,
-			"failed to get user",
+			"failed to get student",
 		)
 		return
 	}
 	response := GetStudentResponse(studentDTOFromDomain(student))
-	responseHandler.JSONResponse(response, http.StatusOK)
+
+	c.JSON(http.StatusOK, response)
+
 }

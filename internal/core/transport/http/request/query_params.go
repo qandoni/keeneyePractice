@@ -2,14 +2,14 @@ package core_http_request
 
 import (
 	"fmt"
-	"net/http"
 	"strconv"
 
+	"github.com/gin-gonic/gin"
 	core_errors "github.com/qandoni/keeneyePractice/internal/core/errors"
 )
 
-func GetIntQueryParam(r *http.Request, key string) (*int, error) {
-	param := r.URL.Query().Get(key)
+func GetIntQueryParam(c *gin.Context, key string) (*int, error) {
+	param := c.Request.URL.Query().Get(key)
 	if param == "" {
 		return nil, nil
 	}
@@ -24,4 +24,21 @@ func GetIntQueryParam(r *http.Request, key string) (*int, error) {
 	}
 
 	return &val, nil
+}
+
+func GetLimitOffsetQueryParams(c *gin.Context) (*int, *int, error) {
+	const (
+		limitQueryParamKey  = "limit"
+		offsetQueryParamKey = "offset"
+	)
+	limit, err := GetIntQueryParam(c, limitQueryParamKey)
+	if err != nil {
+		return nil, nil, fmt.Errorf("get 'limit' query param: %w", err)
+	}
+
+	offset, err := GetIntQueryParam(c, offsetQueryParamKey)
+	if err != nil {
+		return nil, nil, fmt.Errorf("get 'offset' query param: %w", err)
+	}
+	return limit, offset, nil
 }

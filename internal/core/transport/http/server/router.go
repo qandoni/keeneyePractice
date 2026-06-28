@@ -1,48 +1,48 @@
 package core_http_server
 
 import (
-	"fmt"
-	"net/http"
+	"github.com/gin-gonic/gin"
 
+	"github.com/qandoni/keeneyePractice/internal/core/enum"
 	core_http_middleware "github.com/qandoni/keeneyePractice/internal/core/transport/http/middleware"
+	admin_transport_http "github.com/qandoni/keeneyePractice/internal/features/admin/transport/http"
+	auth_transport_http "github.com/qandoni/keeneyePractice/internal/features/auth/transport/http"
+	students_transport_http "github.com/qandoni/keeneyePractice/internal/features/students/transport/http"
+	users_transport_http "github.com/qandoni/keeneyePractice/internal/features/users/transport/http"
 )
 
-type ApiVersion string
+func RegisterRoutes(
+	engine *gin.Engine,
 
-var (
-	ApiVersion1 = ApiVersion("v1")
-	ApiVersion2 = ApiVersion("v2")
-	ApiVersion3 = ApiVersion("v3")
-)
+	authHandler *auth_transport_http.AuthHTTPHandler,
+	adminHandler *admin_transport_http.AdminHTTPHandler,
+	studentsHandler *students_transport_http.StudentsHTTPHandler,
+	usersHandler *users_transport_http.UsersHTTPHandler,
 
-type APIVersionRouter struct {
-	*http.ServeMux
-	apiVersion ApiVersion
-	middleware []core_http_middleware.Middleware
-}
+	parser core_http_middleware.TokenParser,
+) {
+	jwt := core_http_middleware.JWT(parser)
 
-func NewAPIVersionRouter(
-	apiVersion ApiVersion,
-	middleware ...core_http_middleware.Middleware,
-) *APIVersionRouter {
-	return &APIVersionRouter{
-		ServeMux:   http.NewServeMux(),
-		apiVersion: apiVersion,
-		middleware: middleware,
-	}
-}
+	api := engine.Group("/api/v1")
 
-func (r *APIVersionRouter) RegisterRoutes(routes ...Route) {
-	for _, route := range routes {
-		pattern := fmt.Sprintf("%s %s", route.Method, route.Path)
+	auth := api.Group("/auth")
+	authHandler.Register(auth)
 
-		r.Handle(pattern, route.WithMiddleware())
-	}
-}
-
-func (r *APIVersionRouter) WithMiddleware() http.Handler {
-	return core_http_middleware.ChainMiddleware(
-		r,
-		r.middleware...,
+	admin := api.Group("/admin")
+	admin.Use(
+		jwt,
+		core_http_middleware.Role(enum.RoleAdmin),
 	)
+	adminHandler.Register(admin)
+
+	students := api.Group("/students")
+	students.Use(jwt)
+	studentsHandler.Register(students)
+
+	users := api.Group("/users")
+	users.Use(
+		jwt,
+		core_http_middleware.Role(enum.RoleAdmin),
+	)
+	usersHandler.Register(users)
 }

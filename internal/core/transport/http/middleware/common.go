@@ -1,10 +1,14 @@
 package core_http_middleware
 
 import (
-	"net/http"
+	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	core_auth "github.com/qandoni/keeneyePractice/internal/core/auth"
+	"github.com/qandoni/keeneyePractice/internal/core/enum"
+	core_errors "github.com/qandoni/keeneyePractice/internal/core/errors"
 	core_logger "github.com/qandoni/keeneyePractice/internal/core/logger"
 	core_http_response "github.com/qandoni/keeneyePractice/internal/core/transport/http/response"
 
@@ -13,79 +17,147 @@ import (
 
 const (
 	requestIDHeader = "X-Request-ID"
+	loggerKey       = "logger"
 )
 
-func RequestID() Middleware {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			requestID := r.Header.Get(requestIDHeader)
-			if requestID == "" {
-				requestID = uuid.NewString()
+func RequestID() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		requestID := ctx.GetHeader(requestIDHeader)
+		if requestID == "" {
+			requestID = uuid.NewString()
+		}
+		ctx.Writer.Header().Set(requestIDHeader, requestID)
+		ctx.Request.Header.Set(requestIDHeader, requestID)
+
+		ctx.Set(requestIDHeader, requestID)
+		ctx.Next()
+	}
+}
+
+func Logger(log *core_logger.Logger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		requestID := c.GetHeader(requestIDHeader)
+
+		requestLogger := log.With(
+			zap.String("requestID", requestID),
+			zap.String("url", c.Request.URL.String()),
+		)
+
+		c.Set(loggerKey, requestLogger)
+
+		ctx := core_logger.ToContext(
+			c.Request.Context(),
+			requestLogger,
+		)
+		c.Request = c.Request.WithContext(ctx)
+
+		c.Next()
+	}
+}
+
+func Trace() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		log := core_logger.FromContext(c.Request.Context())
+
+		before := time.Now()
+
+		log.Debug(
+			">>> incoming HTTP request",
+			zap.String("http_method", c.Request.Method),
+			zap.Time("time", before.UTC()),
+		)
+
+		c.Next()
+
+		log.Debug(
+			"<<< done HTTP request",
+			zap.Int("status_code", c.Writer.Status()),
+			zap.Duration("latence", time.Since(before)),
+		)
+	}
+}
+
+type TokenParser interface {
+	ParseToken(
+		token string,
+	) (core_auth.AuthInfo, error)
+}
+
+func JWT(
+	parser TokenParser,
+) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			core_http_response.RespondError(
+				c,
+				core_errors.ErrUnauthorized,
+				"missing authorization header",
+			)
+			c.Abort()
+			return
+		}
+
+		const prefix = "Bearer "
+		if !strings.HasPrefix(authHeader, prefix) {
+			core_http_response.RespondError(
+				c,
+				core_errors.ErrUnauthorized,
+				"invalid authorizaiton header",
+			)
+			c.Abort()
+			return
+		}
+
+		token := strings.TrimPrefix(authHeader, prefix)
+
+		authInfo, err := parser.ParseToken(
+			token,
+		)
+		if err != nil {
+			core_http_response.RespondError(
+				c,
+				err,
+				"invalid token",
+			)
+			c.Abort()
+			return
+		}
+		ctx := core_auth.WithAuthInfo(
+			c.Request.Context(),
+			authInfo,
+		)
+		c.Request = c.Request.WithContext(ctx)
+		c.Next()
+	}
+}
+
+func Role(roles ...enum.Role) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authInfo, ok := core_auth.AuthInfoFromContext(c.Request.Context())
+		if !ok {
+			core_http_response.RespondError(
+				c,
+				core_errors.ErrUnauthorized,
+				"authentication information not found",
+			)
+			c.Abort()
+			return
+		}
+
+		for _, role := range roles {
+			if authInfo.Role == role {
+				c.Next()
+				return
 			}
+		}
 
-			r.Header.Set(requestIDHeader, requestID)
-			w.Header().Set(requestIDHeader, requestID)
-
-			next.ServeHTTP(w, r)
-		})
-	}
-}
-
-func Logger(log *core_logger.Logger) Middleware {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			requestID := r.Header.Get(requestIDHeader)
-			l := log.With(
-				zap.String("requestID", requestID),
-				zap.String("url", r.URL.String()),
-			)
-
-			ctx := core_logger.ToContext(r.Context(), l)
-
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-	}
-}
-
-func Trace() Middleware {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-			log := core_logger.FromContext(ctx)
-			rw := core_http_response.NewResponseWriter(w)
-
-			before := time.Now()
-
-			log.Debug(
-				">>> incoming HTTP request",
-				zap.String("http_method", r.Method),
-				zap.Time("time", before.UTC()),
-			)
-
-			next.ServeHTTP(rw, r)
-
-			log.Debug(
-				"<<< done HTTP request",
-				zap.Int("status_code", rw.GetStatusCode()),
-				zap.Duration("latency", time.Since(before)),
-			)
-		})
-	}
-}
-
-func Panic() Middleware {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-			log := core_logger.FromContext(ctx)
-			responseHandler := core_http_response.NewHTTPResponseHandler(log, w)
-			defer func() {
-				if p := recover(); p != nil {
-					responseHandler.PanicResponse(p, "during handle HTTP request got unexpected panic")
-				}
-
-			}()
-			next.ServeHTTP(w, r)
-		})
+		core_http_response.RespondError(
+			c,
+			core_errors.ErrAccessForbidden,
+			"access denied",
+		)
+		c.Abort()
+		return
 	}
 }

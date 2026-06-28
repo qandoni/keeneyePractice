@@ -4,24 +4,39 @@ import (
 	"context"
 	"fmt"
 
+	core_auth "github.com/qandoni/keeneyePractice/internal/core/auth"
 	"github.com/qandoni/keeneyePractice/internal/core/domain"
+	core_errors "github.com/qandoni/keeneyePractice/internal/core/errors"
 )
 
 func (s *StudentsService) PatchStudent(
 	ctx context.Context,
-	id int,
+	studentID int,
 	patch domain.StudentPatch,
 ) (domain.Student, error) {
-	student, err := s.studentsRepository.GetStudent(ctx, id)
+
+	auth, ok := core_auth.AuthInfoFromContext(ctx)
+	if !ok {
+		return domain.Student{}, core_errors.ErrUnauthorized
+	}
+
+	if err := s.policy.CanPatchStudent(ctx, auth, studentID); err != nil {
+		return domain.Student{}, err
+	}
+
+	student, err := s.studentsRepository.GetStudent(ctx, studentID)
 	if err != nil {
 		return domain.Student{}, fmt.Errorf("get student: %w", err)
 	}
+
 	if err := student.ApplyPatch(patch); err != nil {
-		return domain.Student{}, fmt.Errorf("apply student patch: %w", err)
+		return domain.Student{}, err
 	}
-	patchedStudent, err := s.studentsRepository.PatchStudent(ctx, id, student)
+
+	updated, err := s.studentsRepository.PatchStudent(ctx, studentID, student)
 	if err != nil {
-		return domain.Student{}, fmt.Errorf("patch student: %w", err)
+		return domain.Student{}, fmt.Errorf("update student: %w", err)
 	}
-	return patchedStudent, nil
+
+	return updated, nil
 }
