@@ -47,5 +47,6 @@ func (r *UsersRepository) CreateUser(
 		userModel.PasswordHash,
 		userModel.Role,
 	)
+
 	return userDomain, nil
 }

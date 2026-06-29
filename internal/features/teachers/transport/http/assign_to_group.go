@@ -1,4 +1,4 @@
-package admin_transport_http
+package teachers_transport_http
 
 import (
 	"net/http"
@@ -8,10 +8,10 @@ import (
 	core_http_response "github.com/qandoni/keeneyePractice/internal/core/transport/http/response"
 )
 
-func (h *AdminHTTPHandler) AssignTeacherToGroup(c *gin.Context) {
+func (h *TeachersHTTPHandler) AssignToGroup(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	teacherID, err := strconv.Atoi(c.Param("teacher_id"))
+	teacherID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		core_http_response.RespondError(c, err, "invalid teacher id")
 		return
@@ -23,7 +23,7 @@ func (h *AdminHTTPHandler) AssignTeacherToGroup(c *gin.Context) {
 		return
 	}
 
-	err = h.adminService.AssignTeacherToGroup(ctx, teacherID, groupID)
+	err = h.teachersService.AssignToGroup(ctx, teacherID, groupID)
 	if err != nil {
 		core_http_response.RespondError(c, err, "failed to assign teacher to group")
 		return

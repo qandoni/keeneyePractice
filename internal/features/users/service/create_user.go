@@ -23,6 +23,9 @@ func (s *UsersService) CreateUser(
 	user := domain.NewUserUnitialized(input.Login, passwordHash, string(input.Role))
 
 	user, err = s.usersRepository.CreateUser(ctx, user)
+	if err != nil {
+		return domain.User{}, fmt.Errorf("create user in repository: %w", err)
+	}
 
 	return user, nil
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/qandoni/keeneyePractice/internal/core/domain"
 )
 
-func (s *TeachersService) PatchStudent(
+func (s *TeachersService) PatchTeacher(
 	ctx context.Context,
 	id int,
 	patch domain.TeacherPatch,

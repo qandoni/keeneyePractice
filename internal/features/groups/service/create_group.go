@@ -5,35 +5,18 @@ import (
 	"fmt"
 
 	"github.com/qandoni/keeneyePractice/internal/core/domain"
-	group_contracts "github.com/qandoni/keeneyePractice/internal/features/groups/contracts"
 )
 
 func (s *GroupsService) CreateGroup(
 	ctx context.Context,
-	input group_contracts.CreateGroupInput,
+	group domain.Group,
 ) (domain.Group, error) {
-
-	if err := input.Validate(); err != nil {
-		return domain.Group{}, fmt.Errorf(
-			"validate create group input: %w",
-			err,
-		)
+	if err := group.Validate(); err != nil {
+		return domain.Group{}, fmt.Errorf("validate group domain: %w", err)
 	}
-
-	group := domain.NewGroupUninitialized(
-		input.Name,
-	)
-
-	group, err := s.groupsRepository.CreateGroup(
-		ctx,
-		group,
-	)
+	group, err := s.groupsRepository.CreateGroup(ctx, group)
 	if err != nil {
-		return domain.Group{}, fmt.Errorf(
-			"create group: %w",
-			err,
-		)
+		return domain.Group{}, fmt.Errorf("get group from repository: %w", err)
 	}
-
 	return group, nil
 }

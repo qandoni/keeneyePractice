@@ -20,12 +20,16 @@ func (s *AdminService) CreateUser(
 		Role:     cmd.Role,
 	}
 	user, err := s.usersService.CreateUser(ctx, input)
+	fmt.Printf("created user: %+v\n", user)
 	if err != nil {
 		return domain.User{}, fmt.Errorf("create user: %w", err)
 	}
 
-	switch user.Role {
+	switch cmd.Role {
 	case enum.RoleStudent:
+		if cmd.GroupID == nil {
+			return domain.User{}, fmt.Errorf("group_id is required for student")
+		}
 		student := domain.NewStudentUninitialized(
 			user.ID,
 			*cmd.GroupID,

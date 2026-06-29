@@ -21,17 +21,18 @@ func (r *UsersRepository) PatchUser(
 	query := `
 	UPDATE myapp.users
 	SET
-		login=$1
-		password_hash=$2
-		role=$3
-		version=version+1
-	WHERE id=$4 AND version=$5
+		login = $1,
+		password_hash = $2,
+		role = $3,
+		version = version + 1
+	WHERE id = $4
+  	AND version = $5
 	RETURNING
-		id,
-		version,
-		login,
-		password_hash,
-		role; 
+    	id,
+    	version,
+    	login,
+    	password_hash,
+    	role;
 	`
 	row := r.pool.QueryRow(
 		ctx,
