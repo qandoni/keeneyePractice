@@ -5,6 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/qandoni/keeneyePractice/internal/core/domain"
+	"github.com/qandoni/keeneyePractice/internal/core/enum"
+	core_http_middleware "github.com/qandoni/keeneyePractice/internal/core/transport/http/middleware"
 )
 
 type StudentsHTTPHandler struct {
@@ -51,4 +53,5 @@ func (h *StudentsHTTPHandler) Register(rg *gin.RouterGroup) {
 	students.GET("/:id", h.GetStudent)
 
 	students.PATCH("/:id", h.PatchStudent)
+	students.DELETE("/:id", core_http_middleware.Role(enum.RoleAdmin), h.DeleteStudent)
 }

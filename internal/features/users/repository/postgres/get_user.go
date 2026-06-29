@@ -18,7 +18,7 @@ func (r *UsersRepository) GetUser(
 	defer cancel()
 
 	query := `
-	SELECT id, version, login, password_hash, phone_number
+	SELECT id, version, login, password_hash, role
 	FROM myapp.users
 	WHERE id=$1;
 	`

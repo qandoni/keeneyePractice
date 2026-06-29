@@ -20,12 +20,14 @@ import (
 	auth_http_transport "github.com/qandoni/keeneyePractice/internal/features/auth/transport/http"
 	groups_postgres_repository "github.com/qandoni/keeneyePractice/internal/features/groups/repository/postgres"
 	groups_service "github.com/qandoni/keeneyePractice/internal/features/groups/service"
+	groups_http_transport "github.com/qandoni/keeneyePractice/internal/features/groups/transport/http"
 	student_policy "github.com/qandoni/keeneyePractice/internal/features/students/policy"
 	students_postgres_repository "github.com/qandoni/keeneyePractice/internal/features/students/repository/postgres"
 	students_service "github.com/qandoni/keeneyePractice/internal/features/students/service"
 	students_transport_http "github.com/qandoni/keeneyePractice/internal/features/students/transport/http"
 	teachers_postgres_repository "github.com/qandoni/keeneyePractice/internal/features/teachers/repository/postgres"
 	teachers_service "github.com/qandoni/keeneyePractice/internal/features/teachers/service"
+	teachers_transport_http "github.com/qandoni/keeneyePractice/internal/features/teachers/transport/http"
 	users_postgres_repository "github.com/qandoni/keeneyePractice/internal/features/users/repository/postgres"
 	users_service "github.com/qandoni/keeneyePractice/internal/features/users/service"
 	users_http_transport "github.com/qandoni/keeneyePractice/internal/features/users/transport/http"
@@ -57,10 +59,11 @@ func main() {
 	defer pool.Close()
 
 	logger.Debug("initializing feature", zap.String("feature", "students"))
-	studentsRepository := students_postgres_repository.NewStudentsRepository(pool)
 	logger.Debug("initializing feature", zap.String("feature", "teachers"))
+	studentsRepository := students_postgres_repository.NewStudentsRepository(pool)
 	teachersRepository := teachers_postgres_repository.NewUsersRepository(pool)
 	teachersService := teachers_service.NewTeachersService(teachersRepository)
+	teachersTransportHTTP := teachers_transport_http.NewTeachersHTTPHandler(teachersService)
 	studentsPolicy := student_policy.NewStudentAccessPolicy(studentsRepository, teachersRepository)
 	studentsService := students_service.NewStudentsService(studentsRepository, studentsPolicy)
 	studentsTransportHTTP := students_transport_http.NewStudentsHTTPHandler(studentsService)
@@ -74,9 +77,10 @@ func main() {
 	logger.Debug("initializing feature", zap.String("feature", "groups"))
 	groupsRepository := groups_postgres_repository.NewGroupsRepository(pool)
 	groupsService := groups_service.NewGroupsService(groupsRepository)
+	groupsTransportHTTP := groups_http_transport.NewGroupsHTTPHandler(groupsService)
 
 	logger.Debug("initializing feature", zap.String("feature", "admin"))
-	adminService := admin_service.NewAdminService(usersService, studentsService, teachersService, groupsService)
+	adminService := admin_service.NewAdminService(usersService, studentsService, teachersService)
 	adminTransportHTTP := admin_transport_http.NewAdminHTTPHandler(adminService)
 
 	passwordHasher := core_password.NewBcryptHasher()
@@ -103,6 +107,8 @@ func main() {
 		authTransportHTTP,
 		adminTransportHTTP,
 		studentsTransportHTTP,
+		teachersTransportHTTP,
+		groupsTransportHTTP,
 		usersTransportHTTP,
 		jwtManager,
 	)
