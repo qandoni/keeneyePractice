@@ -15,7 +15,7 @@ func (r *StudentsRepository) PatchStudent(
 	id int,
 	student domain.Student,
 ) (domain.Student, error) {
-	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
 	query := `
@@ -33,7 +33,8 @@ func (r *StudentsRepository) PatchStudent(
 		fio,
 		phone_number;
 	`
-	row := r.pool.QueryRow(
+	db := r.dbFromContext(ctx)
+	row := db.QueryRow(
 		ctx,
 		query,
 		student.FIO,

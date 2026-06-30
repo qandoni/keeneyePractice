@@ -11,15 +11,15 @@ func (r *StudentsRepository) CreateStudent(
 	ctx context.Context,
 	student domain.Student,
 ) (domain.Student, error) {
-	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 	query := `
 	INSERT INTO myapp.students (user_id, group_id, fio, phone_number)
 	VALUES ($1, $2, $3, $4)
 	RETURNING id, version, user_id, group_id, fio, phone_number;
 	`
-
-	row := r.pool.QueryRow(ctx, query,
+	db := r.dbFromContext(ctx)
+	row := db.QueryRow(ctx, query,
 		student.UserID,
 		student.GroupID,
 		student.FIO,

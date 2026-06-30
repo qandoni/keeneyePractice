@@ -11,7 +11,7 @@ func (r *TeachersRepository) CreateTeacher(
 	ctx context.Context,
 	teacher domain.Teacher,
 ) (domain.Teacher, error) {
-	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
 	query := `
@@ -19,8 +19,8 @@ func (r *TeachersRepository) CreateTeacher(
 	VALUES ($1, $2, $3)
 	RETURNING id, version, user_id, fio, phone_number;
 	`
-
-	row := r.pool.QueryRow(
+	db := r.dbFromContext(ctx)
+	row := db.QueryRow(
 		ctx, query,
 		teacher.UserID,
 		teacher.FIO,

@@ -14,7 +14,7 @@ func (r *StudentsRepository) GetStudentByUserID(
 	ctx context.Context,
 	userID int,
 ) (domain.Student, error) {
-	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
 	query := `
@@ -28,8 +28,8 @@ func (r *StudentsRepository) GetStudentByUserID(
 	FROM myapp.students
 	WHERE user_id = $1
 	`
-
-	row := r.pool.QueryRow(ctx, query, userID)
+	db := r.dbFromContext(ctx)
+	row := db.QueryRow(ctx, query, userID)
 
 	var m StudentModel
 	err := row.Scan(

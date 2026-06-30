@@ -14,44 +14,67 @@ func (s *AdminService) CreateUser(
 	ctx context.Context,
 	cmd admin_contracts.CreateUserCommand,
 ) (domain.User, error) {
-	input := users_contracts.CreateUserInput{
-		Login:    cmd.Login,
-		Password: cmd.Password,
-		Role:     cmd.Role,
-	}
-	user, err := s.usersService.CreateUser(ctx, input)
-	fmt.Printf("created user: %+v\n", user)
+
+	var createdUser domain.User
+
+	err := s.txManager.WithinTransaction(ctx, func(ctx context.Context) error {
+
+		input := users_contracts.CreateUserInput{
+			Login:    cmd.Login,
+			Password: cmd.Password,
+			Role:     cmd.Role,
+		}
+
+		user, err := s.usersService.CreateUser(ctx, input)
+		if err != nil {
+			return fmt.Errorf("create user: %w", err)
+		}
+
+		createdUser = user
+
+		switch cmd.Role {
+
+		case enum.RoleStudent:
+
+			if cmd.GroupID == nil {
+				return fmt.Errorf("group_id is required for student")
+			}
+
+			student := domain.NewStudentUninitialized(
+				user.ID,
+				*cmd.GroupID,
+				cmd.FIO,
+				cmd.PhoneNumber,
+			)
+
+			if _, err := s.studentsService.CreateStudent(ctx, student); err != nil {
+				return fmt.Errorf("create student: %w", err)
+			}
+
+		case enum.RoleTeacher:
+
+			teacher := domain.NewTeacherUninitialized(
+				user.ID,
+				cmd.FIO,
+				cmd.PhoneNumber,
+			)
+
+			if _, err := s.teachersService.CreateTeacher(ctx, teacher); err != nil {
+				return fmt.Errorf("create teacher: %w", err)
+			}
+
+		case enum.RoleAdmin:
+
+		default:
+			return fmt.Errorf("unknown role: %s", cmd.Role)
+		}
+
+		return nil
+	})
+
 	if err != nil {
-		return domain.User{}, fmt.Errorf("create user: %w", err)
+		return domain.User{}, err
 	}
 
-	switch cmd.Role {
-	case enum.RoleStudent:
-		if cmd.GroupID == nil {
-			return domain.User{}, fmt.Errorf("group_id is required for student")
-		}
-		student := domain.NewStudentUninitialized(
-			user.ID,
-			*cmd.GroupID,
-			cmd.FIO,
-			cmd.PhoneNumber,
-		)
-		_, err := s.studentsService.CreateStudent(ctx, student)
-		if err != nil {
-			return domain.User{}, fmt.Errorf("create student: %w", err)
-		}
-	case enum.RoleTeacher:
-		teacher := domain.NewTeacherUninitialized(user.ID, cmd.FIO, cmd.PhoneNumber)
-		_, err := s.teachersService.CreateTeacher(ctx, teacher)
-		if err != nil {
-			return domain.User{}, fmt.Errorf("create teacher: %w", err)
-		}
-	case enum.RoleAdmin:
-	default:
-		return domain.User{}, fmt.Errorf(
-			"unknown role: %s", cmd.Role,
-		)
-	}
-	return user, nil
-
+	return createdUser, nil
 }

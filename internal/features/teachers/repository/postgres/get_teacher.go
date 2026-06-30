@@ -14,7 +14,7 @@ func (r *TeachersRepository) GetTeacher(
 	ctx context.Context,
 	id int,
 ) (domain.Teacher, error) {
-	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
 	query := `
@@ -23,7 +23,8 @@ func (r *TeachersRepository) GetTeacher(
 	WHERE id=$1;
 	`
 
-	row := r.pool.QueryRow(ctx, query, id)
+	db := r.dbFromContext(ctx)
+	row := db.QueryRow(ctx, query, id)
 	var TeacherModel TeacherModel
 
 	err := row.Scan(

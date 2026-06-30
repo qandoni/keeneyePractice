@@ -1,15 +1,34 @@
 package users_postgres_repository
 
-import core_postgres_pool "github.com/qandoni/keeneyePractice/internal/core/repository/postgres/pool"
+import (
+	"context"
+	"time"
+
+	core_postgres "github.com/qandoni/keeneyePractice/internal/core/repository/postgres"
+)
 
 type UsersRepository struct {
-	pool core_postgres_pool.Pool
+	db      core_postgres.DB
+	timeout time.Duration
 }
 
 func NewUsersRepository(
-	pool core_postgres_pool.Pool,
+	db core_postgres.DB,
+	timeout time.Duration,
 ) *UsersRepository {
 	return &UsersRepository{
-		pool: pool,
+		db:      db,
+		timeout: timeout,
 	}
+}
+
+func (r *UsersRepository) dbFromContext(
+	ctx context.Context,
+) core_postgres.DB {
+
+	db := core_postgres.DBFromContext(ctx)
+	if db != nil {
+		return db
+	}
+	return r.db
 }

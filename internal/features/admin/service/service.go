@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/qandoni/keeneyePractice/internal/core/domain"
+	core_postgres "github.com/qandoni/keeneyePractice/internal/core/repository/postgres"
 	users_contracts "github.com/qandoni/keeneyePractice/internal/features/users/contracts"
 )
 
@@ -11,6 +12,7 @@ type AdminService struct {
 	usersService    UsersService
 	studentsService StudentsService
 	teachersService TeachersService
+	txManager       core_postgres.TransactionManager
 }
 
 type UsersService interface {
@@ -38,10 +40,12 @@ func NewAdminService(
 	usersService UsersService,
 	studentsService StudentsService,
 	teachersService TeachersService,
+	txManager core_postgres.TransactionManager,
 ) *AdminService {
 	return &AdminService{
 		usersService:    usersService,
 		studentsService: studentsService,
 		teachersService: teachersService,
+		txManager:       txManager,
 	}
 }

@@ -10,15 +10,15 @@ func (r *GroupsRepository) DeleteGroup(
 	id int,
 ) error {
 
-	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
 	query := `
 	DELETE FROM myapp.groups
 	WHERE id = $1
 	`
-
-	commandTag, err := r.pool.Exec(
+	db := r.dbFromContext(ctx)
+	commandTag, err := db.Exec(
 		ctx,
 		query,
 		id,

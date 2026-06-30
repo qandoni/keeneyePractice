@@ -13,7 +13,7 @@ func (r *GroupsRepository) GetGroups(
 	offset *int,
 ) ([]domain.Group, error) {
 
-	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
 	query := `
@@ -25,8 +25,8 @@ func (r *GroupsRepository) GetGroups(
 	ORDER BY id
 	LIMIT $1 OFFSET $2
 	`
-
-	rows, err := r.pool.Query(
+	db := r.dbFromContext(ctx)
+	rows, err := db.Query(
 		ctx,
 		query,
 		limit,

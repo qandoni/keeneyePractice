@@ -12,7 +12,7 @@ func (r *GroupsRepository) CreateGroup(
 	group domain.Group,
 ) (domain.Group, error) {
 
-	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
 	query := `
@@ -20,8 +20,8 @@ func (r *GroupsRepository) CreateGroup(
 	VALUES($1)
 	RETURNING id, version, name
 	`
-
-	row := r.pool.QueryRow(
+	db := r.dbFromContext(ctx)
+	row := db.QueryRow(
 		ctx,
 		query,
 		group.Name,

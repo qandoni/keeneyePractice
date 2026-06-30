@@ -14,7 +14,7 @@ func (r *UsersRepository) GetUserByLogin(
 	ctx context.Context,
 	login string,
 ) (domain.User, error) {
-	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
 	query := `
@@ -23,7 +23,8 @@ func (r *UsersRepository) GetUserByLogin(
 	WHERE login=$1;
 	`
 
-	row := r.pool.QueryRow(ctx, query, login)
+	db := r.dbFromContext(ctx)
+	row := db.QueryRow(ctx, query, login)
 
 	var userModel UserModel
 

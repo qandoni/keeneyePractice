@@ -10,7 +10,7 @@ func (r *TeachersRepository) GetTeacherGroupIDs(
 	teacherID int,
 ) ([]int, error) {
 
-	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
 	query := `
@@ -19,7 +19,8 @@ func (r *TeachersRepository) GetTeacherGroupIDs(
 	WHERE teacher_id = $1;
 	`
 
-	rows, err := r.pool.Query(
+	db := r.dbFromContext(ctx)
+	rows, err := db.Query(
 		ctx,
 		query,
 		teacherID,

@@ -3,10 +3,8 @@ CREATE SCHEMA myapp;
 CREATE TABLE myapp.users (
     id SERIAL PRIMARY KEY,
     version INT NOT NULL DEFAULT 1,
-
     login TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
-
     role TEXT NOT NULL CHECK (role IN ('student', 'teacher', 'admin'))
 );
 
@@ -27,19 +25,12 @@ CREATE TABLE myapp.groups (
     name TEXT NOT NULL UNIQUE
 );
 
-INSERT INTO myapp.groups (name)
-VALUES ('ИКБО-01-23');
-
 CREATE TABLE myapp.students (
     id SERIAL PRIMARY KEY,
-
     version INT NOT NULL DEFAULT 1,
     user_id INT NOT NULL UNIQUE REFERENCES myapp.users(id) ON DELETE CASCADE,
     group_id INT NOT NULL REFERENCES myapp.groups(id),
-
-
     fio VARCHAR(100) NOT NULL CHECK(char_length(fio) BETWEEN 3 AND 100),
-
     phone_number VARCHAR(15) CHECK (
         phone_number ~ '^\+[0-9]+$'
         AND char_length(phone_number) BETWEEN 10 AND 15
@@ -48,13 +39,9 @@ CREATE TABLE myapp.students (
 
 CREATE TABLE myapp.teachers (
     id SERIAL PRIMARY KEY,
-
     user_id INT NOT NULL UNIQUE REFERENCES myapp.users(id) ON DELETE CASCADE,
-
     version INT NOT NULL DEFAULT 1,
-
     fio VARCHAR(100) NOT NULL CHECK(char_length(fio) BETWEEN 3 AND 100),
-
     phone_number VARCHAR(15) CHECK (
         phone_number ~ '^\+[0-9]+$'
         AND char_length(phone_number) BETWEEN 10 AND 15

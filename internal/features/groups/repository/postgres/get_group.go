@@ -15,7 +15,7 @@ func (r *GroupsRepository) GetGroup(
 	id int,
 ) (domain.Group, error) {
 
-	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
 	query := `
@@ -26,8 +26,8 @@ func (r *GroupsRepository) GetGroup(
 	FROM myapp.groups
 	WHERE id = $1
 	`
-
-	row := r.pool.QueryRow(
+	db := r.dbFromContext(ctx)
+	row := db.QueryRow(
 		ctx,
 		query,
 		id,
