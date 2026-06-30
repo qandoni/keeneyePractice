@@ -27,7 +27,7 @@ func (m *JWTManager) GenerateToken(
 		Role:   user.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(
-				time.Now().Add(24 * time.Hour),
+				time.Now().Add(1 * time.Minute),
 			),
 		},
 	}

@@ -1,15 +1,35 @@
 package teachers_postgres_repository
 
-import core_postgres_pool "github.com/qandoni/keeneyePractice/internal/core/repository/postgres/pool"
+import (
+	"context"
+	"time"
+
+	core_postgres "github.com/qandoni/keeneyePractice/internal/core/repository/postgres"
+)
 
 type TeachersRepository struct {
-	pool core_postgres_pool.Pool
+	db      core_postgres.DB
+	timeout time.Duration
 }
 
 func NewUsersRepository(
-	pool core_postgres_pool.Pool,
+	db core_postgres.DB,
+	timeout time.Duration,
 ) *TeachersRepository {
 	return &TeachersRepository{
-		pool: pool,
+		db:      db,
+		timeout: timeout,
 	}
+}
+
+func (r *TeachersRepository) dbFromContext(
+	ctx context.Context,
+) core_postgres.DB {
+
+	db := core_postgres.DBFromContext(ctx)
+	if db != nil {
+		return db
+	}
+
+	return r.db
 }

@@ -11,7 +11,7 @@ func (r *TeachersRepository) TeacherHasGroup(
 	groupID int,
 ) (bool, error) {
 
-	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
 	query := `
@@ -25,8 +25,8 @@ func (r *TeachersRepository) TeacherHasGroup(
 	`
 
 	var exists bool
-
-	err := r.pool.QueryRow(
+	db := r.dbFromContext(ctx)
+	err := db.QueryRow(
 		ctx,
 		query,
 		teacherID,

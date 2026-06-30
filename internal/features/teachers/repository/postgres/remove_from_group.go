@@ -13,7 +13,7 @@ func (r *TeachersRepository) RemoveFromGroup(
 	groupID int,
 ) error {
 
-	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
 	query := `
@@ -23,7 +23,8 @@ func (r *TeachersRepository) RemoveFromGroup(
 	  AND group_id = $2;
 	`
 
-	commandTag, err := r.pool.Exec(
+	db := r.dbFromContext(ctx)
+	commandTag, err := db.Exec(
 		ctx,
 		query,
 		teacherID,

@@ -11,7 +11,7 @@ func (r *UsersRepository) CreateUser(
 	ctx context.Context,
 	user domain.User,
 ) (domain.User, error) {
-	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
 	query := `
@@ -20,7 +20,8 @@ func (r *UsersRepository) CreateUser(
 	RETURNING id, version, login, password_hash, role
 	`
 
-	row := r.pool.QueryRow(
+	db := r.dbFromContext(ctx)
+	row := db.QueryRow(
 		ctx,
 		query,
 		user.Login,

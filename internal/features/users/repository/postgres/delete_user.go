@@ -11,15 +11,15 @@ func (r *UsersRepository) DeleteUser(
 	ctx context.Context,
 	id int,
 ) error {
-	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
 	query := `
 	DELETE FROM myapp.users
 	WHERE id=$1;
 	`
-
-	cmdTag, err := r.pool.Exec(ctx, query, id)
+	db := r.dbFromContext(ctx)
+	cmdTag, err := db.Exec(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("exec query: %w", err)
 	}

@@ -58,10 +58,13 @@ func main() {
 	}
 	defer pool.Close()
 
+	logger.Debug("initializing transaction manager")
+	txManager := core_pgx_pool.NewTransactionManager(pool)
+
 	logger.Debug("initializing feature", zap.String("feature", "students"))
 	logger.Debug("initializing feature", zap.String("feature", "teachers"))
-	studentsRepository := students_postgres_repository.NewStudentsRepository(pool)
-	teachersRepository := teachers_postgres_repository.NewUsersRepository(pool)
+	studentsRepository := students_postgres_repository.NewStudentsRepository(pool, pool.OpTimeout())
+	teachersRepository := teachers_postgres_repository.NewUsersRepository(pool, pool.OpTimeout())
 	teachersService := teachers_service.NewTeachersService(teachersRepository)
 	teachersTransportHTTP := teachers_transport_http.NewTeachersHTTPHandler(teachersService)
 	studentsPolicy := student_policy.NewStudentAccessPolicy(studentsRepository, teachersRepository)
@@ -70,17 +73,17 @@ func main() {
 
 	hasher := core_password.NewBcryptHasher()
 	logger.Debug("initializing feature", zap.String("feature", "users"))
-	usersRepository := users_postgres_repository.NewUsersRepository(pool)
+	usersRepository := users_postgres_repository.NewUsersRepository(pool, pool.OpTimeout())
 	usersService := users_service.NewUsersService(usersRepository, hasher)
 	usersTransportHTTP := users_http_transport.NewUsersHTTPHandler(usersService)
 
 	logger.Debug("initializing feature", zap.String("feature", "groups"))
-	groupsRepository := groups_postgres_repository.NewGroupsRepository(pool)
+	groupsRepository := groups_postgres_repository.NewGroupsRepository(pool, pool.OpTimeout())
 	groupsService := groups_service.NewGroupsService(groupsRepository)
 	groupsTransportHTTP := groups_http_transport.NewGroupsHTTPHandler(groupsService)
 
 	logger.Debug("initializing feature", zap.String("feature", "admin"))
-	adminService := admin_service.NewAdminService(usersService, studentsService, teachersService)
+	adminService := admin_service.NewAdminService(usersService, studentsService, teachersService, txManager)
 	adminTransportHTTP := admin_transport_http.NewAdminHTTPHandler(adminService)
 
 	passwordHasher := core_password.NewBcryptHasher()

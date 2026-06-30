@@ -12,7 +12,7 @@ func (r *StudentsRepository) GetStudents(
 	limit *int,
 	offset *int,
 ) ([]domain.Student, error) {
-	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
 	query := `
@@ -22,8 +22,8 @@ func (r *StudentsRepository) GetStudents(
 	LIMIT $1
 	OFFSET $2;
 	`
-
-	rows, err := r.pool.Query(
+	db := r.dbFromContext(ctx)
+	rows, err := db.Query(
 		ctx,
 		query,
 		limit,

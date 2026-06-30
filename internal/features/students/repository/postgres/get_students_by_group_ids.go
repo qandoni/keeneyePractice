@@ -15,7 +15,7 @@ func (r *StudentsRepository) GetStudentsByGroupIDs(
 	offset *int,
 ) ([]domain.Student, error) {
 
-	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
 	query := `
@@ -37,7 +37,8 @@ func (r *StudentsRepository) GetStudentsByGroupIDs(
 		args = append(args, *offset)
 	}
 
-	rows, err := r.pool.Query(ctx, query, args...)
+	db := r.dbFromContext(ctx)
+	rows, err := db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("query students by group ids: %w", err)
 	}

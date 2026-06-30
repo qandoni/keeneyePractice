@@ -12,7 +12,7 @@ func (r *TeachersRepository) AssignToGroup(
 	assignment domain.TeacherGroupAssignment,
 ) error {
 
-	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
 	query := `
@@ -28,7 +28,8 @@ func (r *TeachersRepository) AssignToGroup(
 	);
 	`
 
-	_, err := r.pool.Exec(
+	db := r.dbFromContext(ctx)
+	_, err := db.Exec(
 		ctx,
 		query,
 		assignment.TeacherID,

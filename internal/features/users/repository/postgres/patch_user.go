@@ -15,7 +15,7 @@ func (r *UsersRepository) PatchUser(
 	id int,
 	user domain.User,
 ) (domain.User, error) {
-	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
 	query := `
@@ -34,7 +34,8 @@ func (r *UsersRepository) PatchUser(
     	password_hash,
     	role;
 	`
-	row := r.pool.QueryRow(
+	db := r.dbFromContext(ctx)
+	row := db.QueryRow(
 		ctx,
 		query,
 		user.Login,
