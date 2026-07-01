@@ -19,6 +19,25 @@ VALUES (
     'admin'
 );
 
+CREATE TABLE myapp.refresh_tokens (
+    id BIGSERIAL PRIMARY KEY,
+    version BIGINT NOT NULL DEFAULT 1,
+    user_id BIGINT NOT NULL,
+    token_hash TEXT NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT refresh_tokens_user_id_fkey
+        FOREIGN KEY (user_id)
+        REFERENCES myapp.users(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT refresh_tokens_token_hash_key
+        UNIQUE(token_hash),
+
+    CONSTRAINT refresh_tokens_user_id_key
+        UNIQUE(user_id)
+);
+
 CREATE TABLE myapp.groups (
     id SERIAL PRIMARY KEY,
     version INT NOT NULL DEFAULT 1,

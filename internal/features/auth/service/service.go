@@ -5,18 +5,27 @@ import (
 
 	core_auth "github.com/qandoni/keeneyePractice/internal/core/auth"
 	"github.com/qandoni/keeneyePractice/internal/core/domain"
+	core_postgres "github.com/qandoni/keeneyePractice/internal/core/repository/postgres"
 )
 
 type AuthService struct {
-	usersRepository UsersRepository
-	passwordHasher  PasswordHasher
-	jwtManager      JWTManager
+	usersRepository   UsersRepository
+	refreshRepository RefreshTokenRepository
+	passwordHasher    PasswordHasher
+	sha256Hasher      Sha256Hasher
+	jwtManager        JWTManager
+	refreshGenerator  RefreshGenerator
+	txManager         core_postgres.TransactionManager
 }
 
 type UsersRepository interface {
 	GetUserByLogin(
 		ctx context.Context,
 		login string,
+	) (domain.User, error)
+	GetUser(
+		ctx context.Context,
+		id int,
 	) (domain.User, error)
 }
 
@@ -30,23 +39,61 @@ type PasswordHasher interface {
 	) error
 }
 
+type Sha256Hasher interface {
+	Hash(value string) string
+}
+
 type JWTManager interface {
-	GenerateToken(
+	GenerateAccessToken(
 		user domain.User,
 	) (string, error)
-	ParseToken(
+	ParseAccessToken(
 		token string,
 	) (core_auth.AuthInfo, error)
 }
 
+type RefreshGenerator interface {
+	Generate() (string, error)
+	Hash(
+		token string,
+	) string
+}
+
+type RefreshTokenRepository interface {
+	Create(
+		ctx context.Context,
+		token domain.RefreshToken,
+	) error
+	Get(
+		ctx context.Context,
+		tokenHash string,
+	) (domain.RefreshToken, error)
+	Delete(
+		ctx context.Context,
+		tokenHash string,
+	) error
+	PatchRefreshToken(
+		ctx context.Context,
+		token domain.RefreshToken,
+	) (domain.RefreshToken, error)
+}
+
 func NewAuthService(
 	usersRepository UsersRepository,
+	refreshRepository RefreshTokenRepository,
 	passwordHasher PasswordHasher,
+	sha256Hasher Sha256Hasher,
 	jwtManager JWTManager,
+	refreshGenerator RefreshGenerator,
+	txManager core_postgres.TransactionManager,
 ) *AuthService {
 	return &AuthService{
-		usersRepository: usersRepository,
-		passwordHasher:  passwordHasher,
-		jwtManager:      jwtManager,
+		usersRepository:   usersRepository,
+		refreshRepository: refreshRepository,
+		passwordHasher:    passwordHasher,
+		sha256Hasher:      sha256Hasher,
+		jwtManager:        jwtManager,
+		refreshGenerator:  refreshGenerator,
+		txManager:         txManager,
 	}
 }

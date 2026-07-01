@@ -78,7 +78,7 @@ func Trace() gin.HandlerFunc {
 }
 
 type TokenParser interface {
-	ParseToken(
+	ParseAccessToken(
 		token string,
 	) (core_auth.AuthInfo, error)
 }
@@ -111,7 +111,7 @@ func JWT(
 
 		token := strings.TrimPrefix(authHeader, prefix)
 
-		authInfo, err := parser.ParseToken(
+		authInfo, err := parser.ParseAccessToken(
 			token,
 		)
 		if err != nil {

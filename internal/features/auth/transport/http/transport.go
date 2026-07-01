@@ -15,7 +15,11 @@ type AuthService interface {
 	Login(
 		ctx context.Context,
 		input auth_contracts.LoginInput,
-	) (string, error)
+	) (auth_contracts.LoginOutput, error)
+	Refresh(
+		ctx context.Context,
+		input auth_contracts.RefreshInput,
+	) (auth_contracts.RefreshOutput, error)
 }
 
 func NewAuthHTTPHandler(
@@ -28,4 +32,5 @@ func NewAuthHTTPHandler(
 
 func (h *AuthHTTPHandler) Register(rg *gin.RouterGroup) {
 	rg.POST("/login", h.Login)
+	rg.POST("/refresh", h.Refresh)
 }

@@ -8,20 +8,19 @@ import (
 	auth_contracts "github.com/qandoni/keeneyePractice/internal/features/auth/contracts"
 )
 
-type LoginRequest struct {
-	Login    string `json:"login"`
-	Password string `json:"password"`
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token"`
 }
 
-type LoginResponse struct {
+type RefreshResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 }
 
-func (h *AuthHTTPHandler) Login(c *gin.Context) {
+func (h *AuthHTTPHandler) Refresh(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	var request LoginRequest
+	var request RefreshRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		core_http_response.RespondError(
@@ -31,27 +30,20 @@ func (h *AuthHTTPHandler) Login(c *gin.Context) {
 		)
 		return
 	}
-
-	input := auth_contracts.LoginInput{
-		Login:    request.Login,
-		Password: request.Password,
+	input := auth_contracts.RefreshInput{
+		RefreshToken: request.RefreshToken,
 	}
-	output, err := h.authService.Login(
-		ctx,
-		input,
-	)
+	output, err := h.authService.Refresh(ctx, input)
 	if err != nil {
 		core_http_response.RespondError(
 			c,
 			err,
-			"failed to login",
+			"failed to refresh token",
 		)
-		return
 	}
-	response := LoginResponse{
+	response := RefreshResponse{
 		AccessToken:  output.AccessToken,
 		RefreshToken: output.RefreshToken,
 	}
-
 	c.JSON(http.StatusOK, response)
 }
