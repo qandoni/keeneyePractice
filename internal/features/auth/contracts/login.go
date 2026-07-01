@@ -5,6 +5,7 @@ type LoginInput struct {
 	Password string
 }
 
-type LoginOuput struct {
-	Token string
+type LoginOutput struct {
+	AccessToken  string
+	RefreshToken string
 }

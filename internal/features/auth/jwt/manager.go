@@ -19,7 +19,7 @@ func NewJWTManager(secretKey string) *JWTManager {
 	}
 }
 
-func (m *JWTManager) GenerateToken(
+func (m *JWTManager) GenerateAccessToken(
 	user domain.User,
 ) (string, error) {
 	claims := Claims{
@@ -37,7 +37,7 @@ func (m *JWTManager) GenerateToken(
 	)
 }
 
-func (m *JWTManager) ParseToken(
+func (m *JWTManager) ParseAccessToken(
 	tokenString string,
 ) (core_auth.AuthInfo, error) {
 	token, err := jwt.ParseWithClaims(

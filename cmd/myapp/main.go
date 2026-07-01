@@ -10,12 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 	core_logger "github.com/qandoni/keeneyePractice/internal/core/logger"
 	core_password "github.com/qandoni/keeneyePractice/internal/core/password"
+	core_password_hash "github.com/qandoni/keeneyePractice/internal/core/password/hash"
 	core_pgx_pool "github.com/qandoni/keeneyePractice/internal/core/repository/postgres/pool/pgx"
 	core_http_middleware "github.com/qandoni/keeneyePractice/internal/core/transport/http/middleware"
 	core_http_server "github.com/qandoni/keeneyePractice/internal/core/transport/http/server"
 	admin_service "github.com/qandoni/keeneyePractice/internal/features/admin/service"
 	admin_transport_http "github.com/qandoni/keeneyePractice/internal/features/admin/transport/http"
 	auth_jwt "github.com/qandoni/keeneyePractice/internal/features/auth/jwt"
+	auth_refresh "github.com/qandoni/keeneyePractice/internal/features/auth/refresh"
+	auth_postgres_repository "github.com/qandoni/keeneyePractice/internal/features/auth/repository/postgres"
 	auth_service "github.com/qandoni/keeneyePractice/internal/features/auth/service"
 	auth_http_transport "github.com/qandoni/keeneyePractice/internal/features/auth/transport/http"
 	groups_postgres_repository "github.com/qandoni/keeneyePractice/internal/features/groups/repository/postgres"
@@ -88,8 +91,11 @@ func main() {
 
 	passwordHasher := core_password.NewBcryptHasher()
 	logger.Debug("initializing feature", zap.String("feature", "auth"))
+	refreshRepository := auth_postgres_repository.NewRefreshTokensRepository(pool, pool.OpTimeout())
+	refreshGenerator := auth_refresh.NewGenerator()
+	sha256Hasher := core_password_hash.NewSHA256Hasher()
 	jwtManager := auth_jwt.NewJWTManager("my-secret-key")
-	authService := auth_service.NewAuthService(usersRepository, passwordHasher, jwtManager)
+	authService := auth_service.NewAuthService(usersRepository, refreshRepository, passwordHasher, sha256Hasher, jwtManager, refreshGenerator, txManager)
 	authTransportHTTP := auth_http_transport.NewAuthHTTPHandler(authService)
 
 	logger.Debug("initializing HTTP server")
