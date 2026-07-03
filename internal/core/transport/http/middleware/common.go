@@ -1,6 +1,8 @@
 package core_http_middleware
 
 import (
+	"errors"
+	"net/http"
 	"strings"
 	"time"
 
@@ -89,22 +91,14 @@ func JWT(
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			core_http_response.RespondError(
-				c,
-				core_errors.ErrUnauthorized,
-				"missing authorization header",
-			)
+			c.Error(core_errors.ErrUnauthorized).SetMeta("missing authorization header")
 			c.Abort()
 			return
 		}
 
 		const prefix = "Bearer "
 		if !strings.HasPrefix(authHeader, prefix) {
-			core_http_response.RespondError(
-				c,
-				core_errors.ErrUnauthorized,
-				"invalid authorizaiton header",
-			)
+			c.Error(core_errors.ErrUnauthorized).SetMeta("invalid authorizaiton header")
 			c.Abort()
 			return
 		}
@@ -115,11 +109,7 @@ func JWT(
 			token,
 		)
 		if err != nil {
-			core_http_response.RespondError(
-				c,
-				err,
-				"invalid token",
-			)
+			c.Error(err).SetMeta("invalid token")
 			c.Abort()
 			return
 		}
@@ -136,11 +126,7 @@ func Role(roles ...enum.Role) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authInfo, ok := core_auth.AuthInfoFromContext(c.Request.Context())
 		if !ok {
-			core_http_response.RespondError(
-				c,
-				core_errors.ErrUnauthorized,
-				"authentication information not found",
-			)
+			c.Error(core_errors.ErrUnauthorized).SetMeta("authentication information not found")
 			c.Abort()
 			return
 		}
@@ -152,12 +138,56 @@ func Role(roles ...enum.Role) gin.HandlerFunc {
 			}
 		}
 
-		core_http_response.RespondError(
-			c,
-			core_errors.ErrAccessForbidden,
-			"access denied",
-		)
+		c.Error(core_errors.ErrAccessForbidden).SetMeta("access denied")
 		c.Abort()
 		return
+	}
+}
+
+func ErrorHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Next()
+		if len(c.Errors) == 0 {
+			return
+		}
+		err := c.Errors.Last()
+
+		log := core_logger.FromContext(c.Request.Context())
+
+		var (
+			statusCode int
+			logFunc    func(string, ...zap.Field)
+		)
+
+		switch {
+		case errors.Is(err.Err, core_errors.ErrUnauthorized):
+			statusCode = http.StatusUnauthorized
+			logFunc = log.Warn
+		case errors.Is(err.Err, core_errors.ErrInvalidArgument):
+			statusCode = http.StatusBadRequest
+			logFunc = log.Warn
+		case errors.Is(err.Err, core_errors.ErrConflict):
+			statusCode = http.StatusConflict
+			logFunc = log.Warn
+		case errors.Is(err.Err, core_errors.ErrNotFound):
+			statusCode = http.StatusNotFound
+			logFunc = log.Debug
+		case errors.Is(err.Err, core_errors.ErrAccessForbidden):
+			statusCode = http.StatusForbidden
+			logFunc = log.Debug
+		default:
+			statusCode = http.StatusInternalServerError
+			logFunc = log.Error
+		}
+		logFunc(err.Error(), zap.Error(err.Err))
+
+		message := "request failed"
+		if err.Meta != nil {
+			message = err.Meta.(string)
+		}
+		c.AbortWithStatusJSON(statusCode, core_http_response.ErrorResponse{
+			Error:   err.Err.Error(),
+			Message: message,
+		})
 	}
 }

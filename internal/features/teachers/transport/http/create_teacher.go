@@ -5,7 +5,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/qandoni/keeneyePractice/internal/core/domain"
-	core_http_response "github.com/qandoni/keeneyePractice/internal/core/transport/http/response"
 )
 
 type CreateTeacherRequest struct {
@@ -22,11 +21,7 @@ func (h *TeachersHTTPHandler) CreateTeacher(c *gin.Context) {
 	var request CreateTeacherRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		core_http_response.RespondError(
-			c,
-			err,
-			"failed to decode and validate HTTP request",
-		)
+		c.Error(err).SetMeta("failed to decode and validate HTTP request")
 		return
 	}
 
@@ -34,11 +29,7 @@ func (h *TeachersHTTPHandler) CreateTeacher(c *gin.Context) {
 
 	teacher, err := h.teachersService.CreateTeacher(ctx, teacher)
 	if err != nil {
-		core_http_response.RespondError(
-			c,
-			err,
-			"failed to create teacher",
-		)
+		c.Error(err).SetMeta("failed to create teacher")
 		return
 	}
 	response := CreateTeacherResponse(

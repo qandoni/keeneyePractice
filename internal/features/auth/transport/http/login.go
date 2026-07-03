@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	core_http_response "github.com/qandoni/keeneyePractice/internal/core/transport/http/response"
 	auth_contracts "github.com/qandoni/keeneyePractice/internal/features/auth/contracts"
 )
 
@@ -24,11 +23,7 @@ func (h *AuthHTTPHandler) Login(c *gin.Context) {
 	var request LoginRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		core_http_response.RespondError(
-			c,
-			err,
-			"failed to decode and validate HTTP request",
-		)
+		c.Error(err).SetMeta("failed to decode and validate HTTP request")
 		return
 	}
 
@@ -41,11 +36,7 @@ func (h *AuthHTTPHandler) Login(c *gin.Context) {
 		input,
 	)
 	if err != nil {
-		core_http_response.RespondError(
-			c,
-			err,
-			"failed to login",
-		)
+		c.Error(err).SetMeta("failed to login")
 		return
 	}
 	response := LoginResponse{
