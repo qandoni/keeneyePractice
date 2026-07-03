@@ -8,7 +8,6 @@ import (
 	"github.com/qandoni/keeneyePractice/internal/core/domain"
 	"github.com/qandoni/keeneyePractice/internal/core/enum"
 	core_http_request "github.com/qandoni/keeneyePractice/internal/core/transport/http/request"
-	core_http_response "github.com/qandoni/keeneyePractice/internal/core/transport/http/response"
 	core_http_types "github.com/qandoni/keeneyePractice/internal/core/transport/http/types"
 )
 
@@ -47,31 +46,19 @@ func (h *UsersHTTPHandler) PatchUser(c *gin.Context) {
 
 	userID, err := core_http_request.GetIntPathValue(c, "id")
 	if err != nil {
-		core_http_response.RespondError(
-			c,
-			err,
-			"failed to get int path value",
-		)
+		c.Error(err).SetMeta("failed to get int path value")
 		return
 	}
 	var request PatchUserRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		core_http_response.RespondError(
-			c,
-			err,
-			"failed to decode and validate HTTP request",
-		)
+		c.Error(err).SetMeta("failed to decode and validate HTTP request")
 		return
 	}
 	userPatch := userPatchFromRequest(request)
 
 	userDomain, err := h.usersService.PatchUser(ctx, userID, userPatch)
 	if err != nil {
-		core_http_response.RespondError(
-			c,
-			err,
-			"failed to patch user",
-		)
+		c.Error(err).SetMeta("failed to patch user")
 		return
 	}
 	response := PatchUserResponse(userDTOFromDomain(userDomain))

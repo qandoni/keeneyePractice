@@ -5,7 +5,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/qandoni/keeneyePractice/internal/core/domain"
-	core_http_response "github.com/qandoni/keeneyePractice/internal/core/transport/http/response"
 )
 
 type CreateGroupRequest struct {
@@ -20,7 +19,7 @@ func (h *GroupsHTTPHandler) CreateGroup(c *gin.Context) {
 	var req CreateGroupRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		core_http_response.RespondError(c, err, "invalid request")
+		c.Error(err).SetMeta("failed to decode and validate HTTP request")
 		return
 	}
 
@@ -28,7 +27,7 @@ func (h *GroupsHTTPHandler) CreateGroup(c *gin.Context) {
 
 	group, err := h.groupsService.CreateGroup(ctx, group)
 	if err != nil {
-		core_http_response.RespondError(c, err, "failed to create group")
+		c.Error(err).SetMeta("failed to create group")
 		return
 	}
 	response := CreateGroupResponse(groupDTOFromDomain(group))

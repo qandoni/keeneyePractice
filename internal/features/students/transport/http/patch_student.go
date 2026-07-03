@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/qandoni/keeneyePractice/internal/core/domain"
 	core_http_request "github.com/qandoni/keeneyePractice/internal/core/transport/http/request"
-	core_http_response "github.com/qandoni/keeneyePractice/internal/core/transport/http/response"
 	core_http_types "github.com/qandoni/keeneyePractice/internal/core/transport/http/types"
 )
 
@@ -49,21 +48,13 @@ func (h *StudentsHTTPHandler) PatchStudent(c *gin.Context) {
 
 	studentID, err := core_http_request.GetIntPathValue(c, "id")
 	if err != nil {
-		core_http_response.RespondError(
-			c,
-			err,
-			"failed to get int path value",
-		)
+		c.Error(err).SetMeta("failed to get 'studentID' path value")
 		return
 	}
 	var request PatchStudentRequest
 
-	if err := core_http_request.DecodeAndValidateRequest(c, &request); err != nil {
-		core_http_response.RespondError(
-			c,
-			err,
-			"failed to decode and validate HTTP request",
-		)
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.Error(err).SetMeta("failed to decode and validate request")
 		return
 	}
 
@@ -71,11 +62,7 @@ func (h *StudentsHTTPHandler) PatchStudent(c *gin.Context) {
 
 	studentDomain, err := h.studentsService.PatchStudent(ctx, studentID, studentPatch)
 	if err != nil {
-		core_http_response.RespondError(
-			c,
-			err,
-			"failed to patch student",
-		)
+		c.Error(err).SetMeta("failed to patch student")
 		return
 	}
 	response := PatchStudentResponse(studentDTOFromDomain(studentDomain))

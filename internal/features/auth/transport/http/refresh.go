@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	core_http_response "github.com/qandoni/keeneyePractice/internal/core/transport/http/response"
 	auth_contracts "github.com/qandoni/keeneyePractice/internal/features/auth/contracts"
 )
 
@@ -23,11 +22,7 @@ func (h *AuthHTTPHandler) Refresh(c *gin.Context) {
 	var request RefreshRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		core_http_response.RespondError(
-			c,
-			err,
-			"failed to decode and validate HTTP request",
-		)
+		c.Error(err).SetMeta("failed to decode and validate HTTP request")
 		return
 	}
 	input := auth_contracts.RefreshInput{
@@ -35,11 +30,7 @@ func (h *AuthHTTPHandler) Refresh(c *gin.Context) {
 	}
 	output, err := h.authService.Refresh(ctx, input)
 	if err != nil {
-		core_http_response.RespondError(
-			c,
-			err,
-			"failed to refresh token",
-		)
+		c.Error(err).SetMeta("failed to refresh token")
 	}
 	response := RefreshResponse{
 		AccessToken:  output.AccessToken,

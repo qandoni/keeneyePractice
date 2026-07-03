@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	core_http_response "github.com/qandoni/keeneyePractice/internal/core/transport/http/response"
 )
 
 func (h *TeachersHTTPHandler) RemoveFromGroup(c *gin.Context) {
@@ -13,19 +12,19 @@ func (h *TeachersHTTPHandler) RemoveFromGroup(c *gin.Context) {
 
 	teacherID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		core_http_response.RespondError(c, err, "invalid teacher id")
+		c.Error(err).SetMeta("invalid teacher id")
 		return
 	}
 
 	groupID, err := strconv.Atoi(c.Param("group_id"))
 	if err != nil {
-		core_http_response.RespondError(c, err, "invalid group id")
+		c.Error(err).SetMeta("invalid group id")
 		return
 	}
 
 	err = h.teachersService.RemoveFromGroup(ctx, teacherID, groupID)
 	if err != nil {
-		core_http_response.RespondError(c, err, "failed to remove teacher from group")
+		c.Error(err).SetMeta("failed to remove teacher from group")
 		return
 	}
 

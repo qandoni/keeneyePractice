@@ -109,6 +109,7 @@ func main() {
 		core_http_middleware.Logger(logger),
 		core_http_middleware.Trace(),
 		gin.Recovery(),
+		core_http_middleware.ErrorHandler(),
 	)
 
 	core_http_server.RegisterRoutes(

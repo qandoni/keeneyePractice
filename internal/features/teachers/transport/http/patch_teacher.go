@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/qandoni/keeneyePractice/internal/core/domain"
 	core_http_request "github.com/qandoni/keeneyePractice/internal/core/transport/http/request"
-	core_http_response "github.com/qandoni/keeneyePractice/internal/core/transport/http/response"
 	core_http_types "github.com/qandoni/keeneyePractice/internal/core/transport/http/types"
 )
 
@@ -48,21 +47,13 @@ func (h *TeachersHTTPHandler) PatchTeacher(c *gin.Context) {
 
 	teacherID, err := core_http_request.GetIntPathValue(c, "id")
 	if err != nil {
-		core_http_response.RespondError(
-			c,
-			err,
-			"failed to get int path value",
-		)
+		c.Error(err).SetMeta("failed to get int path value")
 		return
 	}
 	var request PatchTeacherRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		core_http_response.RespondError(
-			c,
-			err,
-			"failed to decode and validate HTTP request",
-		)
+		c.Error(err).SetMeta("failed to decode and validate HTTP request")
 		return
 	}
 
@@ -70,11 +61,7 @@ func (h *TeachersHTTPHandler) PatchTeacher(c *gin.Context) {
 
 	teacherDomain, err := h.teachersService.PatchTeacher(ctx, teacherID, teacherPatch)
 	if err != nil {
-		core_http_response.RespondError(
-			c,
-			err,
-			"failed to patch teacher",
-		)
+		c.Error(err).SetMeta("failed to patch teacher")
 		return
 	}
 	response := PatchTeacherResponse(teacherDTOFromDomain(teacherDomain))
