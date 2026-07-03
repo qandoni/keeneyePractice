@@ -60,7 +60,7 @@ type RefreshGenerator interface {
 }
 
 type RefreshTokenRepository interface {
-	Create(
+	Save(
 		ctx context.Context,
 		token domain.RefreshToken,
 	) error
@@ -72,10 +72,6 @@ type RefreshTokenRepository interface {
 		ctx context.Context,
 		tokenHash string,
 	) error
-	PatchRefreshToken(
-		ctx context.Context,
-		token domain.RefreshToken,
-	) (domain.RefreshToken, error)
 }
 
 func NewAuthService(

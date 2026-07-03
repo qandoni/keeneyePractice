@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/qandoni/keeneyePractice/internal/core/domain"
 	core_errors "github.com/qandoni/keeneyePractice/internal/core/errors"
 	auth_contracts "github.com/qandoni/keeneyePractice/internal/features/auth/contracts"
 )
@@ -63,16 +64,19 @@ func (s *AuthService) Refresh(
 
 	err = s.txManager.WithinTransaction(ctx, func(ctx context.Context) error {
 
-		refreshToken.TokenHash = newHash
-		refreshToken.ExpiresAt = time.Now().Add(30 * 24 * time.Hour)
-		fmt.Printf("%+v\n", refreshToken)
-		_, err := s.refreshRepository.PatchRefreshToken(
+		err := s.refreshRepository.Save(
 			ctx,
-			refreshToken,
+			domain.NewRefreshToken(
+				refreshToken.ID,
+				refreshToken.Version,
+				refreshToken.UserID,
+				newHash,
+				time.Now().Add(30*24*time.Hour),
+			),
 		)
 		if err != nil {
 			return fmt.Errorf(
-				"patch refresh token: %w",
+				"save refresh token: %w",
 				err,
 			)
 		}

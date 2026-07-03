@@ -42,9 +42,10 @@ func (s *AuthService) Login(
 
 	refreshHash := s.sha256Hasher.Hash(refreshToken)
 
-	err = s.refreshRepository.Create(
+	err = s.refreshRepository.Save(
 		ctx,
 		domain.RefreshToken{
+			Version:   0,
 			TokenHash: refreshHash,
 			UserID:    user.ID,
 			ExpiresAt: time.Now().Add(30 * 24 * time.Hour),

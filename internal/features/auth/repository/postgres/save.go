@@ -7,7 +7,7 @@ import (
 	"github.com/qandoni/keeneyePractice/internal/core/domain"
 )
 
-func (r *RefreshTokensRepository) Create(
+func (r *RefreshTokensRepository) Save(
 	ctx context.Context,
 	token domain.RefreshToken,
 ) error {
@@ -30,6 +30,11 @@ func (r *RefreshTokensRepository) Create(
 		$3,
 		$4
 	)
+	ON CONFLICT (user_id)
+	DO UPDATE SET
+		token_hash = EXCLUDED.token_hash,
+		expires_at = EXCLUDED.expires_at,
+		version = refresh_tokens.version + 1
 	`
 
 	_, err := r.db.Exec(
