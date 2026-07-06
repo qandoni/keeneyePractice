@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	core_logger "github.com/qandoni/keeneyePractice/internal/core/logger"
+	core_email "github.com/qandoni/keeneyePractice/internal/core/notification/email"
 	core_password "github.com/qandoni/keeneyePractice/internal/core/password"
 	core_password_hash "github.com/qandoni/keeneyePractice/internal/core/password/hash"
 	core_pgx_pool "github.com/qandoni/keeneyePractice/internal/core/repository/postgres/pool/pgx"
@@ -24,6 +25,9 @@ import (
 	groups_postgres_repository "github.com/qandoni/keeneyePractice/internal/features/groups/repository/postgres"
 	groups_service "github.com/qandoni/keeneyePractice/internal/features/groups/service"
 	groups_http_transport "github.com/qandoni/keeneyePractice/internal/features/groups/transport/http"
+	registration_postgres_repository "github.com/qandoni/keeneyePractice/internal/features/registration_requests/repository/postgres"
+	registration_service "github.com/qandoni/keeneyePractice/internal/features/registration_requests/service"
+	registration_http_transport "github.com/qandoni/keeneyePractice/internal/features/registration_requests/transport/http"
 	student_policy "github.com/qandoni/keeneyePractice/internal/features/students/policy"
 	students_postgres_repository "github.com/qandoni/keeneyePractice/internal/features/students/repository/postgres"
 	students_service "github.com/qandoni/keeneyePractice/internal/features/students/service"
@@ -98,6 +102,22 @@ func main() {
 	authService := auth_service.NewAuthService(usersRepository, refreshRepository, passwordHasher, sha256Hasher, jwtManager, refreshGenerator, txManager)
 	authTransportHTTP := auth_http_transport.NewAuthHTTPHandler(authService)
 
+	emailSender := core_email.NewSMTPSender(core_email.NewConfigMust())
+
+	registrationRequestsRepository := registration_postgres_repository.NewRegistrationRequestsRepository(pool, pool.OpTimeout())
+	registrationRequestsService := registration_service.NewRegistrationRequestsService(
+		registrationRequestsRepository,
+		groupsService,
+		usersService,
+		studentsService,
+		teachersService,
+		refreshGenerator,
+		sha256Hasher,
+		emailSender,
+		txManager,
+	)
+	registrationRequestsHTTPTransport := registration_http_transport.NewRegistrationRequestsHTTPHandler(registrationRequestsService)
+
 	logger.Debug("initializing HTTP server")
 	server := core_http_server.NewHTTPServer(
 		core_http_server.NewConfigMust(),
@@ -120,6 +140,7 @@ func main() {
 		teachersTransportHTTP,
 		groupsTransportHTTP,
 		usersTransportHTTP,
+		registrationRequestsHTTPTransport,
 		jwtManager,
 	)
 

@@ -7,11 +7,11 @@ import (
 	"github.com/qandoni/keeneyePractice/internal/core/domain"
 )
 
-func (s *UsersService) GetUserByLogin(
+func (s *UsersService) GetUserByEmail(
 	ctx context.Context,
-	login string,
+	email string,
 ) (domain.User, error) {
-	user, err := s.usersRepository.GetUserByLogin(ctx, login)
+	user, err := s.usersRepository.GetUserByEmail(ctx, email)
 	if err != nil {
 		return domain.User{}, fmt.Errorf("get user from repository: %w", err)
 	}

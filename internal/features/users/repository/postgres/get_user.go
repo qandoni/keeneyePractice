@@ -18,7 +18,7 @@ func (r *UsersRepository) GetUser(
 	defer cancel()
 
 	query := `
-	SELECT id, version, login, password_hash, role
+	SELECT id, version, email, password_hash, role
 	FROM myapp.users
 	WHERE id=$1;
 	`
@@ -29,7 +29,7 @@ func (r *UsersRepository) GetUser(
 	err := row.Scan(
 		&userModel.ID,
 		&userModel.Version,
-		&userModel.Login,
+		&userModel.Email,
 		&userModel.PasswordHash,
 		&userModel.Role,
 	)
@@ -44,7 +44,7 @@ func (r *UsersRepository) GetUser(
 	userDomain := domain.NewUser(
 		userModel.ID,
 		userModel.Version,
-		userModel.Login,
+		userModel.Email,
 		userModel.PasswordHash,
 		userModel.Role,
 	)

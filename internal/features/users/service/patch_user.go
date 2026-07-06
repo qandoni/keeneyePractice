@@ -31,8 +31,8 @@ func (s *UsersService) ApplyPatch(
 	patch domain.UserPatch,
 ) (domain.User, error) {
 	tmp := user
-	if patch.Login.Set {
-		tmp.Login = *patch.Login.Value
+	if patch.Email.Set {
+		tmp.Email = *patch.Email.Value
 	}
 	if patch.Role.Set {
 		tmp.Role = *patch.Role.Value

@@ -13,12 +13,12 @@ func (s *AuthService) Login(
 	ctx context.Context,
 	input auth_contracts.LoginInput,
 ) (auth_contracts.LoginOutput, error) {
-	user, err := s.usersRepository.GetUserByLogin(
+	user, err := s.usersRepository.GetUserByEmail(
 		ctx,
-		input.Login,
+		input.Email,
 	)
 	if err != nil {
-		return auth_contracts.LoginOutput{}, fmt.Errorf("get user by login: %w", err)
+		return auth_contracts.LoginOutput{}, fmt.Errorf("get user by email: %w", err)
 	}
 
 	err = s.passwordHasher.Compare(

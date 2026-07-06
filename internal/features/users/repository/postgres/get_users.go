@@ -16,7 +16,7 @@ func (r *UsersRepository) GetUsers(
 	defer cancel()
 
 	query := `
-	SELECT id, version, login, password_hash, role
+	SELECT id, version, email, password_hash, role
 	FROM myapp.users
 	ORDER BY id ASC
 	LIMIT $1
@@ -40,7 +40,7 @@ func (r *UsersRepository) GetUsers(
 		err := rows.Scan(
 			&userModel.ID,
 			&userModel.Version,
-			&userModel.Login,
+			&userModel.Email,
 			&userModel.PasswordHash,
 			&userModel.Role,
 		)

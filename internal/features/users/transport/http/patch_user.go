@@ -12,7 +12,7 @@ import (
 )
 
 type PatchUserRequest struct {
-	Login    core_http_types.Nullable[string] `json:"login"`
+	Email    core_http_types.Nullable[string] `json:"login"`
 	Password core_http_types.Nullable[string] `json:"password"`
 	Role     core_http_types.Nullable[string] `json:"role" validate:"required"`
 }
@@ -20,13 +20,13 @@ type PatchUserRequest struct {
 type PatchUserResponse UserDTOResponse
 
 func (r *PatchUserRequest) Validate() error {
-	if r.Login.Set {
-		if r.Login.Value == nil {
-			return fmt.Errorf("`Login` can't be NULL")
+	if r.Email.Set {
+		if r.Email.Value == nil {
+			return fmt.Errorf("`Email` can't be NULL")
 		}
-		loginLen := len([]rune(*r.Login.Value))
-		if loginLen < 3 || loginLen > 100 {
-			return fmt.Errorf("`Login` must be between 3 and 100 symbols")
+		emailLen := len([]rune(*r.Email.Value))
+		if emailLen < 3 || emailLen > 100 {
+			return fmt.Errorf("`Email` must be between 3 and 100 symbols")
 		}
 	}
 	if r.Password.Set {
@@ -84,7 +84,7 @@ func userPatchFromRequest(request PatchUserRequest) domain.UserPatch {
 	}
 
 	return domain.NewUserPatch(
-		request.Login.ToDomain(),
+		request.Email.ToDomain(),
 		request.Password.ToDomain(),
 		role,
 	)

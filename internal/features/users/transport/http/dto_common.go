@@ -14,7 +14,7 @@ func userDTOFromDomain(user domain.User) UserDTOResponse {
 	return UserDTOResponse{
 		ID:           user.ID,
 		Version:      user.Version,
-		Login:        user.Login,
+		Login:        user.Email,
 		PasswordHash: user.PasswordHash,
 		Role:         string(user.Role),
 	}

@@ -21,7 +21,7 @@ func (r *UsersRepository) PatchUser(
 	query := `
 	UPDATE myapp.users
 	SET
-		login = $1,
+		email = $1,
 		password_hash = $2,
 		role = $3,
 		version = version + 1
@@ -30,7 +30,7 @@ func (r *UsersRepository) PatchUser(
 	RETURNING
     	id,
     	version,
-    	login,
+    	email,
     	password_hash,
     	role;
 	`
@@ -38,7 +38,7 @@ func (r *UsersRepository) PatchUser(
 	row := db.QueryRow(
 		ctx,
 		query,
-		user.Login,
+		user.Email,
 		user.PasswordHash,
 		user.Role,
 		id,
@@ -50,7 +50,7 @@ func (r *UsersRepository) PatchUser(
 	err := row.Scan(
 		&userModel.ID,
 		&userModel.Version,
-		&userModel.Login,
+		&userModel.Email,
 		&userModel.PasswordHash,
 		&userModel.Role,
 	)
@@ -67,7 +67,7 @@ func (r *UsersRepository) PatchUser(
 	userDomain := domain.NewUser(
 		userModel.ID,
 		userModel.Version,
-		userModel.Login,
+		userModel.Email,
 		userModel.PasswordHash,
 		userModel.Role,
 	)

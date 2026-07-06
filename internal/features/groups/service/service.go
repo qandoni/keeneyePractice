@@ -30,6 +30,10 @@ type GroupsRepository interface {
 		ctx context.Context,
 		id int,
 	) error
+	GetGroupByName(
+		ctx context.Context,
+		name string,
+	) (domain.Group, error)
 }
 
 func NewGroupsService(

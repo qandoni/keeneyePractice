@@ -16,9 +16,9 @@ type UsersRepository interface {
 		ctx context.Context,
 		user domain.User,
 	) (domain.User, error)
-	GetUserByLogin(
+	GetUserByEmail(
 		ctx context.Context,
-		login string,
+		email string,
 	) (domain.User, error)
 	GetUser(
 		ctx context.Context,

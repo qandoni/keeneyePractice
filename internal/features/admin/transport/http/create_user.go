@@ -9,7 +9,7 @@ import (
 )
 
 type CreateUserRequest struct {
-	Login       string `json:"login" binding:"required"`
+	Email       string `json:"email" binding:"required"`
 	Password    string `json:"password" binding:"required"`
 	Role        string `json:"role" binding:"required"`
 	FIO         string `json:"fio"`
@@ -46,7 +46,7 @@ func commandFromRequest(
 	r CreateUserRequest,
 ) (admin_contracts.CreateUserCommand, error) {
 	return admin_contracts.CreateUserCommand{
-		Login:       r.Login,
+		Email:       r.Email,
 		Password:    r.Password,
 		Role:        enum.Role(r.Role),
 		FIO:         r.FIO,

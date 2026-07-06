@@ -26,7 +26,7 @@ func (h *UsersHTTPHandler) CreateUser(c *gin.Context) {
 	}
 
 	input := users_contracts.CreateUserInput{
-		Login:    request.Login,
+		Email:    request.Login,
 		Password: request.Password,
 		Role:     enum.Role(request.Role),
 	}
