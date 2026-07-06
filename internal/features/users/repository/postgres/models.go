@@ -5,7 +5,7 @@ import "github.com/qandoni/keeneyePractice/internal/core/domain"
 type UserModel struct {
 	ID           int
 	Version      int
-	Login        string
+	Email        string
 	PasswordHash string
 	Role         string
 }
@@ -16,7 +16,7 @@ func userDomainsFromModels(users []UserModel) []domain.User {
 		userDomains[i] = domain.NewUser(
 			user.ID,
 			user.Version,
-			user.Login,
+			user.Email,
 			user.PasswordHash,
 			user.Role,
 		)

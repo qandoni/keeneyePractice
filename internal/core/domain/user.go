@@ -10,7 +10,7 @@ import (
 type User struct {
 	ID           int
 	Version      int
-	Login        string
+	Email        string
 	PasswordHash string
 	Role         enum.Role
 }
@@ -18,62 +18,62 @@ type User struct {
 func NewUser(
 	id int,
 	version int,
-	login string,
+	email string,
 	passwordHash string,
 	role string,
 ) User {
 	return User{
 		ID:           id,
 		Version:      version,
-		Login:        login,
+		Email:        email,
 		PasswordHash: passwordHash,
 		Role:         enum.Role(role),
 	}
 }
 
 func (u *User) Validate() error {
-	loginLen := len([]rune(u.Login))
-	if loginLen < 3 || loginLen > 100 {
-		return fmt.Errorf("invalid `Login` len: %d: %w", loginLen, core_errors.ErrInvalidArgument)
+	emailLen := len([]rune(u.Email))
+	if emailLen < 3 || emailLen > 100 {
+		return fmt.Errorf("invalid `Email` len: %d: %w", emailLen, core_errors.ErrInvalidArgument)
 	}
 	return nil
 }
 
 func NewUserUnitialized(
-	login string,
+	email string,
 	passwordHash string,
 	role string,
 ) User {
 	return NewUser(
 		UninitializedID,
 		UninitializedVersion,
-		login,
+		email,
 		passwordHash,
 		role,
 	)
 }
 
 type UserPatch struct {
-	Login    Nullable[string]
+	Email    Nullable[string]
 	Password Nullable[string]
 	Role     Nullable[enum.Role]
 }
 
 func NewUserPatch(
-	login Nullable[string],
+	email Nullable[string],
 	password Nullable[string],
 	role Nullable[enum.Role],
 ) UserPatch {
 	return UserPatch{
-		Login:    login,
+		Email:    email,
 		Password: password,
 		Role:     role,
 	}
 }
 
 func (p *UserPatch) Validate() error {
-	if p.Login.Set && p.Login.Value == nil {
-		return fmt.Errorf("`Login` can't be patched to NULL: %w", core_errors.ErrInvalidArgument)
+	if p.Email.Set && p.Email.Value == nil {
+		return fmt.Errorf("`Email` can't be patched to NULL: %w", core_errors.ErrInvalidArgument)
 	}
 
 	if p.Password.Set && p.Password.Value == nil {

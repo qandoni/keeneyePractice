@@ -20,7 +20,7 @@ func (s *AdminService) CreateUser(
 	err := s.txManager.WithinTransaction(ctx, func(ctx context.Context) error {
 
 		input := users_contracts.CreateUserInput{
-			Login:    cmd.Login,
+			Email:    cmd.Email,
 			Password: cmd.Password,
 			Role:     cmd.Role,
 		}

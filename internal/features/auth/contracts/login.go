@@ -1,7 +1,7 @@
 package auth_contracts
 
 type LoginInput struct {
-	Login    string
+	Email    string
 	Password string
 }
 

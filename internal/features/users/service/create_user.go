@@ -20,7 +20,7 @@ func (s *UsersService) CreateUser(
 		return domain.User{}, fmt.Errorf("hash password: %w", err)
 	}
 
-	user := domain.NewUserUnitialized(input.Login, passwordHash, string(input.Role))
+	user := domain.NewUserUnitialized(input.Email, passwordHash, string(input.Role))
 
 	user, err = s.usersRepository.CreateUser(ctx, user)
 	if err != nil {

@@ -8,17 +8,17 @@ import (
 )
 
 type CreateUserInput struct {
-	Login    string
+	Email    string
 	Password string
 	Role     enum.Role
 }
 
 func (i *CreateUserInput) Validate() error {
-	loginLen := len([]rune(i.Login))
-	if loginLen < 3 || loginLen > 100 {
+	emailLen := len([]rune(i.Email))
+	if emailLen < 3 || emailLen > 100 {
 		return fmt.Errorf(
-			"invalid 'Login' len: %d: %w",
-			loginLen,
+			"invalid 'Email' len: %d: %w",
+			emailLen,
 			core_errors.ErrInvalidArgument,
 		)
 	}

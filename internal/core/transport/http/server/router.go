@@ -8,6 +8,7 @@ import (
 	admin_transport_http "github.com/qandoni/keeneyePractice/internal/features/admin/transport/http"
 	auth_transport_http "github.com/qandoni/keeneyePractice/internal/features/auth/transport/http"
 	groups_http_transport "github.com/qandoni/keeneyePractice/internal/features/groups/transport/http"
+	registration_http_transport "github.com/qandoni/keeneyePractice/internal/features/registration_requests/transport/http"
 	students_transport_http "github.com/qandoni/keeneyePractice/internal/features/students/transport/http"
 	teachers_transport_http "github.com/qandoni/keeneyePractice/internal/features/teachers/transport/http"
 	users_transport_http "github.com/qandoni/keeneyePractice/internal/features/users/transport/http"
@@ -22,6 +23,7 @@ func RegisterRoutes(
 	teachersHandler *teachers_transport_http.TeachersHTTPHandler,
 	groupsHandler *groups_http_transport.GroupsHTTPHandler,
 	usersHandler *users_transport_http.UsersHTTPHandler,
+	registrationRequestsHandler *registration_http_transport.RegistrationRequestsHTTPHandler,
 
 	parser core_http_middleware.TokenParser,
 ) {
@@ -63,4 +65,13 @@ func RegisterRoutes(
 		core_http_middleware.Role(enum.RoleAdmin),
 	)
 	usersHandler.Register(users)
+
+	registrationRequests := api.Group("/register")
+	registrationRequests.POST("/complete", registrationRequestsHandler.Complete)
+	registationRequestsAdmin := api.Group("/register")
+	registationRequestsAdmin.Use(
+		jwt,
+		core_http_middleware.Role(enum.RoleAdmin),
+	)
+	registationRequestsAdmin.POST("/import", registrationRequestsHandler.Import)
 }

@@ -15,16 +15,16 @@ func (r *UsersRepository) CreateUser(
 	defer cancel()
 
 	query := `
-	INSERT INTO myapp.users(login, password_hash, role)
+	INSERT INTO myapp.users(email, password_hash, role)
 	VALUES($1, $2, $3)
-	RETURNING id, version, login, password_hash, role
+	RETURNING id, version, email, password_hash, role
 	`
 
 	db := r.dbFromContext(ctx)
 	row := db.QueryRow(
 		ctx,
 		query,
-		user.Login,
+		user.Email,
 		user.PasswordHash,
 		user.Role,
 	)
@@ -33,7 +33,7 @@ func (r *UsersRepository) CreateUser(
 	err := row.Scan(
 		&userModel.ID,
 		&userModel.Version,
-		&userModel.Login,
+		&userModel.Email,
 		&userModel.PasswordHash,
 		&userModel.Role,
 	)
@@ -44,7 +44,7 @@ func (r *UsersRepository) CreateUser(
 	userDomain := domain.NewUser(
 		userModel.ID,
 		userModel.Version,
-		userModel.Login,
+		userModel.Email,
 		userModel.PasswordHash,
 		userModel.Role,
 	)

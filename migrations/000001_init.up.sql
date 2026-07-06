@@ -3,18 +3,18 @@ CREATE SCHEMA myapp;
 CREATE TABLE myapp.users (
     id SERIAL PRIMARY KEY,
     version INT NOT NULL DEFAULT 1,
-    login TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL CHECK (role IN ('student', 'teacher', 'admin'))
 );
 
 INSERT INTO myapp.users (
-    login,
+    email,
     password_hash,
     role
 )
 VALUES (
-    'admin',
+    'admin@mail.ru',
     '$2a$10$FeWE6q1VzFPiWZBRyj8kU.2bs8s3QY7M0QOaSbuBtumy9yryP137.',
     'admin'
 );
@@ -74,6 +74,35 @@ CREATE TABLE myapp.teacher_groups (
 
     PRIMARY KEY (teacher_id, group_id)
 );
+
+CREATE TABLE myapp.registration_requests (
+    id SERIAL PRIMARY KEY,
+    version INT NOT NULL DEFAULT 1,
+    fio VARCHAR(100) NOT NULL
+        CHECK (char_length(fio) BETWEEN 3 AND 100),
+    email TEXT NOT NULL UNIQUE,
+        CHECK (char_length(email) BETWEEN 3 AND 100),
+    phone_number VARCHAR(15) CHECK (
+        phone_number ~ '^\+[0-9]+$'
+        AND char_length(phone_number) BETWEEN 10 AND 15
+    ),
+    role TEXT NOT NULL
+        CHECK (role IN ('student', 'teacher')),
+    group_id INT NULL
+        REFERENCES myapp.groups(id)
+        ON DELETE SET NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    status TEXT NOT NULL DEFAULT 'pending'
+        CHECK (status IN (
+            'pending',
+            'completed',
+            'expired',
+            'cancelled'
+        )),
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 
 CREATE INDEX idx_students_group_id ON myapp.students(group_id);
 CREATE INDEX idx_students_user_id ON myapp.students(user_id);

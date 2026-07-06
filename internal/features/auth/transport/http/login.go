@@ -8,7 +8,7 @@ import (
 )
 
 type LoginRequest struct {
-	Login    string `json:"login"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
@@ -28,7 +28,7 @@ func (h *AuthHTTPHandler) Login(c *gin.Context) {
 	}
 
 	input := auth_contracts.LoginInput{
-		Login:    request.Login,
+		Email:    request.Email,
 		Password: request.Password,
 	}
 	output, err := h.authService.Login(

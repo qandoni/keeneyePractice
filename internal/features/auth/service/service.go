@@ -19,9 +19,9 @@ type AuthService struct {
 }
 
 type UsersRepository interface {
-	GetUserByLogin(
+	GetUserByEmail(
 		ctx context.Context,
-		login string,
+		email string,
 	) (domain.User, error)
 	GetUser(
 		ctx context.Context,
@@ -54,9 +54,6 @@ type JWTManager interface {
 
 type RefreshGenerator interface {
 	Generate() (string, error)
-	Hash(
-		token string,
-	) string
 }
 
 type RefreshTokenRepository interface {
