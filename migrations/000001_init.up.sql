@@ -96,8 +96,7 @@ CREATE TABLE myapp.registration_requests (
         CHECK (status IN (
             'pending',
             'completed',
-            'expired',
-            'cancelled'
+            'expired'
         )),
     expires_at TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

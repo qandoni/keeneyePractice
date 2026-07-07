@@ -35,6 +35,9 @@ type RegistrationRequestRepository interface {
 		ctx context.Context,
 		hash string,
 	) (domain.RegistrationRequest, error)
+	ExpireRequests(
+		ctx context.Context,
+	) error
 }
 
 type PasswordHasher interface {
