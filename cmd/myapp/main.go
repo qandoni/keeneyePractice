@@ -103,7 +103,7 @@ func main() {
 	authTransportHTTP := auth_http_transport.NewAuthHTTPHandler(authService)
 
 	emailSender := core_email.NewSMTPSender(core_email.NewConfigMust())
-
+	logger.Debug("initializing feature", zap.String("feature", "registration_requests"))
 	registrationRequestsRepository := registration_postgres_repository.NewRegistrationRequestsRepository(pool, pool.OpTimeout())
 	registrationRequestsService := registration_service.NewRegistrationRequestsService(
 		registrationRequestsRepository,
@@ -117,6 +117,10 @@ func main() {
 		txManager,
 	)
 	registrationRequestsHTTPTransport := registration_http_transport.NewRegistrationRequestsHTTPHandler(registrationRequestsService)
+
+	logger.Debug("initializing expire request time worker")
+	worker := registration_service.NewExpireWorker(registrationRequestsRepository)
+	go worker.Start(ctx)
 
 	logger.Debug("initializing HTTP server")
 	server := core_http_server.NewHTTPServer(
