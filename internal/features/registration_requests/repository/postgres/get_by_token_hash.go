@@ -25,13 +25,18 @@ func (r *RegistrationRequestsRepository) GetByTokenHash(
 		role,
 		group_id,
 		token_hash,
+		status,
+		email_status,
+		email_retry_count,
+		last_email_attempt_at,
+		email_sent_at,
 		expires_at,
-		status
+		created_at
 	FROM myapp.registration_requests
 	WHERE token_hash = $1
 	`
-
-	row := r.db.QueryRow(ctx, query, hash)
+	db := r.dbFromContext(ctx)
+	row := db.QueryRow(ctx, query, hash)
 
 	var m RegistrationRequestModel
 
@@ -44,8 +49,13 @@ func (r *RegistrationRequestsRepository) GetByTokenHash(
 		&m.Role,
 		&m.GroupID,
 		&m.TokenHash,
-		&m.ExpiresAt,
 		&m.Status,
+		&m.EmailStatus,
+		&m.EmailRetryCount,
+		&m.LastEmailAttempt,
+		&m.EmailSentAt,
+		&m.ExpiresAt,
+		&m.CreatedAt,
 	)
 
 	if err != nil {

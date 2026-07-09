@@ -1,6 +1,7 @@
 package registration_postgres_repository
 
 import (
+	"context"
 	"time"
 
 	core_postgres "github.com/qandoni/keeneyePractice/internal/core/repository/postgres"
@@ -19,4 +20,15 @@ func NewRegistrationRequestsRepository(
 		db:      db,
 		timeout: timeout,
 	}
+}
+
+func (r *RegistrationRequestsRepository) dbFromContext(
+	ctx context.Context,
+) core_postgres.DB {
+
+	db := core_postgres.DBFromContext(ctx)
+	if db != nil {
+		return db
+	}
+	return r.db
 }

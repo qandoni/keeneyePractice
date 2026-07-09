@@ -22,23 +22,31 @@ func (r *RegistrationRequestsRepository) Create(
 		role,
 		group_id,
 		token_hash,
-		expires_at,
-		status	
+		status,
+		email_status,
+		email_retry_count,
+		last_email_attempt_at,
+		email_sent_at,
+		expires_at
 	)
 	VALUES(
-		$1, $2, $3, $4, $5, $6, $7, $8
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 	)
 	`
-
-	_, err := r.db.Exec(ctx, query,
+	db := r.dbFromContext(ctx)
+	_, err := db.Exec(ctx, query,
 		req.FIO,
 		req.Email,
 		req.PhoneNumber,
 		req.Role,
 		req.GroupID,
 		req.TokenHash,
-		req.ExpiresAt,
 		req.Status,
+		req.EmailStatus,
+		req.EmailRetryCount,
+		req.LastEmailAttempt,
+		req.EmailSentAt,
+		req.ExpiresAt,
 	)
 	if err != nil {
 		return fmt.Errorf("create registration request: %w", err)

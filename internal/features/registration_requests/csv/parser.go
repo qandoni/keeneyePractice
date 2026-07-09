@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/qandoni/keeneyePractice/internal/core/enum"
+	core_errors "github.com/qandoni/keeneyePractice/internal/core/errors"
 )
 
 func Parse(reader io.Reader) ([]Row, error) {
@@ -17,7 +18,7 @@ func Parse(reader io.Reader) ([]Row, error) {
 	}
 
 	if len(records) <= 1 {
-		return nil, fmt.Errorf("csv is empty")
+		return nil, fmt.Errorf("csv len: %w", core_errors.ErrEmptyFile)
 	}
 
 	rows := make([]Row, 0, len(records)-1)
@@ -27,8 +28,9 @@ func Parse(reader io.Reader) ([]Row, error) {
 
 		if len(record) != 5 {
 			return nil, fmt.Errorf(
-				"line %d: expected 5 colums",
+				"line %d: expected 5 colums: %w",
 				i+1,
+				core_errors.ErrInvalidArgument,
 			)
 		}
 
@@ -37,9 +39,10 @@ func Parse(reader io.Reader) ([]Row, error) {
 		case enum.RoleStudent, enum.RoleTeacher:
 		default:
 			return nil, fmt.Errorf(
-				"line %d: invalid role %q",
+				"line %d: %q: %w",
 				i+1,
 				record[3],
+				core_errors.ErrInvalidArgument,
 			)
 		}
 

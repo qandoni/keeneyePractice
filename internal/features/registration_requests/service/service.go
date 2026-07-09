@@ -6,6 +6,7 @@ import (
 	"github.com/qandoni/keeneyePractice/internal/core/domain"
 	"github.com/qandoni/keeneyePractice/internal/core/enum"
 	core_postgres "github.com/qandoni/keeneyePractice/internal/core/repository/postgres"
+	registration_contracts "github.com/qandoni/keeneyePractice/internal/features/registration_requests/contracts"
 	users_contracts "github.com/qandoni/keeneyePractice/internal/features/users/contracts"
 )
 
@@ -38,16 +39,16 @@ type RegistrationRequestRepository interface {
 	ExpireRequests(
 		ctx context.Context,
 	) error
-}
-
-type PasswordHasher interface {
-	Hash(
-		password string,
-	) (string, error)
-	Compare(
-		hash string,
-		password string,
+	GetAll(
+		ctx context.Context,
+	) ([]domain.RegistrationRequest, error)
+	UpdateAfterEmailAttempt(
+		ctx context.Context,
+		input registration_contracts.UpdateEmailAttemptInput,
 	) error
+	GetRetryableEmailRequests(
+		ctx context.Context,
+	) ([]domain.RegistrationRequest, error)
 }
 
 type EmailSender interface {

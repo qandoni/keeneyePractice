@@ -7,16 +7,21 @@ import (
 )
 
 type RegistrationRequest struct {
-	ID          int
-	Version     int
-	FIO         string
-	Email       string
-	PhoneNumber string
-	Role        enum.Role
-	GroupID     *int
-	TokenHash   string
-	ExpiresAt   time.Time
-	Status      enum.RegistrationStatus
+	ID               int
+	Version          int
+	FIO              string
+	Email            string
+	PhoneNumber      string
+	Role             enum.Role
+	GroupID          *int
+	TokenHash        string
+	Status           enum.RegistrationStatus
+	EmailStatus      enum.EmailStatus
+	EmailRetryCount  int
+	LastEmailAttempt *time.Time
+	EmailSentAt      *time.Time
+	ExpiresAt        time.Time
+	CreatedAt        time.Time
 }
 
 func NewRegistrationRequest(
@@ -28,19 +33,29 @@ func NewRegistrationRequest(
 	role enum.Role,
 	groupID *int,
 	tokenHash string,
-	expiresAt time.Time,
 	status enum.RegistrationStatus,
+	emailStatus enum.EmailStatus,
+	emailRetryCount int,
+	lastEmailAttempt *time.Time,
+	emailSentAt *time.Time,
+	expiresAt time.Time,
+	createdAt time.Time,
 ) RegistrationRequest {
 	return RegistrationRequest{
-		ID:          id,
-		Version:     version,
-		FIO:         fio,
-		Email:       email,
-		PhoneNumber: phoneNumber,
-		Role:        role,
-		GroupID:     groupID,
-		TokenHash:   tokenHash,
-		ExpiresAt:   expiresAt,
-		Status:      status,
+		ID:               id,
+		Version:          version,
+		FIO:              fio,
+		Email:            email,
+		PhoneNumber:      phoneNumber,
+		Role:             role,
+		GroupID:          groupID,
+		TokenHash:        tokenHash,
+		Status:           status,
+		EmailStatus:      emailStatus,
+		EmailRetryCount:  emailRetryCount,
+		LastEmailAttempt: lastEmailAttempt,
+		EmailSentAt:      emailSentAt,
+		ExpiresAt:        expiresAt,
+		CreatedAt:        createdAt,
 	}
 }
