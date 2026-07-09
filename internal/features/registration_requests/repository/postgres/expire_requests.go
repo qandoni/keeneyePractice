@@ -20,9 +20,8 @@ func (r *RegistrationRequestsRepository) ExpireRequests(
 			status = 'pending'
 			AND expires_at <= NOW()
 	`
-
-	_, err := r.db.Exec(ctx, query)
-	fmt.Println("changed status somewhere...")
+	db := r.dbFromContext(ctx)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return fmt.Errorf("expire registration requests: %w", err)
 	}

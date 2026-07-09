@@ -98,6 +98,18 @@ CREATE TABLE myapp.registration_requests (
             'completed',
             'expired'
         )),
+    email_status TEXT NOT NULL DEFAULT 'pending'
+        CHECK (email_status IN(
+            'pending',
+            'sent',
+            'failed',
+            'sending',
+            'give up'
+        )),
+    email_retry_count INT NOT NULL DEFAULT 0,
+    last_email_attempt_at TIMESTAMPTZ NULL,
+    email_sent_at TIMESTAMPTZ NULL,
+
     expires_at TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

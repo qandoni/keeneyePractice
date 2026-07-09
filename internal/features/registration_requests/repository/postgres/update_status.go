@@ -22,8 +22,8 @@ func (r *RegistrationRequestsRepository) UpdateStatus(
 		    version = version + 1
 		WHERE id = $2
 	`
-
-	result, err := r.db.Exec(ctx, query, status, id)
+	db := r.dbFromContext(ctx)
+	result, err := db.Exec(ctx, query, status, id)
 	if err != nil {
 		return fmt.Errorf("update registration status: %w", err)
 	}

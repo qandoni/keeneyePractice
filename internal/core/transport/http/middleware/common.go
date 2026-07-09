@@ -175,6 +175,10 @@ func ErrorHandler() gin.HandlerFunc {
 		case errors.Is(err.Err, core_errors.ErrAccessForbidden):
 			statusCode = http.StatusForbidden
 			logFunc = log.Debug
+		case errors.Is(err.Err, core_errors.ErrEmptyFile):
+			statusCode = http.StatusBadRequest
+			logFunc = log.Debug
+
 		default:
 			statusCode = http.StatusInternalServerError
 			logFunc = log.Error

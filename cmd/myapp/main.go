@@ -28,6 +28,7 @@ import (
 	registration_postgres_repository "github.com/qandoni/keeneyePractice/internal/features/registration_requests/repository/postgres"
 	registration_service "github.com/qandoni/keeneyePractice/internal/features/registration_requests/service"
 	registration_http_transport "github.com/qandoni/keeneyePractice/internal/features/registration_requests/transport/http"
+	registration_worker "github.com/qandoni/keeneyePractice/internal/features/registration_requests/worker"
 	student_policy "github.com/qandoni/keeneyePractice/internal/features/students/policy"
 	students_postgres_repository "github.com/qandoni/keeneyePractice/internal/features/students/repository/postgres"
 	students_service "github.com/qandoni/keeneyePractice/internal/features/students/service"
@@ -118,9 +119,10 @@ func main() {
 	)
 	registrationRequestsHTTPTransport := registration_http_transport.NewRegistrationRequestsHTTPHandler(registrationRequestsService)
 
-	logger.Debug("initializing expire request time worker")
-	worker := registration_service.NewExpireWorker(registrationRequestsRepository)
-	go worker.Start(ctx)
+	logger.Debug("initializing retry email send worker")
+	registrationConfig := registration_worker.NewConfigMust()
+	emailWorker := registration_worker.NewRetryEmailWorker(registrationRequestsRepository, emailSender, refreshGenerator, sha256Hasher, registrationConfig)
+	go emailWorker.Run(ctx)
 
 	logger.Debug("initializing HTTP server")
 	server := core_http_server.NewHTTPServer(

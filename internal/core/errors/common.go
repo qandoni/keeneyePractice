@@ -11,4 +11,5 @@ var (
 	ErrInvalidPassword     = errors.New("invalid password")
 	ErrAccessForbidden     = errors.New("access forbidden")
 	ErrRefreshTokenExpired = errors.New("refresh token expired")
+	ErrEmptyFile           = errors.New("empty file")
 )
