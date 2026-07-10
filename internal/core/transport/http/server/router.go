@@ -74,4 +74,5 @@ func RegisterRoutes(
 		core_http_middleware.Role(enum.RoleAdmin),
 	)
 	registationRequestsAdmin.POST("/import", registrationRequestsHandler.Import)
+	registationRequestsAdmin.GET("/requests", registrationRequestsHandler.GetAll)
 }

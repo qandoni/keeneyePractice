@@ -9,6 +9,8 @@ import (
 
 func (r *RegistrationRequestsRepository) GetAll(
 	ctx context.Context,
+	limit *int,
+	offset *int,
 ) ([]domain.RegistrationRequest, error) {
 
 	ctx, cancel := context.WithTimeout(ctx, r.timeout)
@@ -33,9 +35,11 @@ func (r *RegistrationRequestsRepository) GetAll(
 		created_at
 	FROM myapp.registration_requests
 	ORDER BY id
+	LIMIT $1
+	OFFSET $2
 	`
 	db := r.dbFromContext(ctx)
-	rows, err := db.Query(ctx, query)
+	rows, err := db.Query(ctx, query, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("query requests: %w", err)
 	}

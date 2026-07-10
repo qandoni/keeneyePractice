@@ -41,6 +41,8 @@ type RegistrationRequestRepository interface {
 	) error
 	GetAll(
 		ctx context.Context,
+		limit *int,
+		offset *int,
 	) ([]domain.RegistrationRequest, error)
 	UpdateAfterEmailAttempt(
 		ctx context.Context,

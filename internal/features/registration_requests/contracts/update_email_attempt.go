@@ -7,18 +7,12 @@ import (
 )
 
 type UpdateEmailAttemptInput struct {
-	ID      int
-	Version int
-
-	TokenHash string
-
-	ExpiresAt time.Time
-
-	EmailStatus enum.EmailStatus
-
-	EmailRetryCount int
-
+	ID               int
+	Version          int
+	TokenHash        string
+	ExpiresAt        time.Time
+	EmailStatus      enum.EmailStatus
+	EmailRetryCount  int
 	LastEmailAttempt *time.Time
-
-	EmailSentAt *time.Time
+	EmailSentAt      *time.Time
 }

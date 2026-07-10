@@ -165,15 +165,6 @@ func (w *RetryEmailWorker) retry(ctx context.Context) error {
 			input.EmailSentAt = &now
 		}
 
-		fmt.Println(
-			"updating email status",
-			input.ID,
-			input.EmailStatus,
-			input.EmailRetryCount,
-			input.EmailSentAt,
-			input.Version,
-		)
-
 		if err := w.repository.UpdateAfterEmailAttempt(ctx, input); err != nil {
 			return fmt.Errorf(
 				"update after email attempt: %w",
