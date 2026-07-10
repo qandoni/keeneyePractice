@@ -16,9 +16,7 @@ func (s *RegistrationRequestService) Import(
 	input registration_contracts.ImportInput,
 ) error {
 	return s.txManager.WithinTransaction(ctx, func(ctx context.Context) error {
-		// TODO: нужно провалидировать случаи нвекорректного ввода данных и отправлять конкретные status code в response header.
-		// также нужно проверить что все письма отправились пользователям и вынести сообщение в отдельный config
-		// нужно проверять email - существует ли такой почтовый ящик и можно ли отправить туда письмо
+
 		for _, row := range input.Rows {
 
 			if row.Role != enum.RoleStudent && row.Role != enum.RoleTeacher {

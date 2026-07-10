@@ -103,7 +103,6 @@ CREATE TABLE myapp.registration_requests (
             'pending',
             'sent',
             'failed',
-            'sending',
             'give up'
         )),
     email_retry_count INT NOT NULL DEFAULT 0,

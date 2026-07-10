@@ -43,7 +43,7 @@ func (h *RegistrationRequestsHTTPHandler) Import(c *gin.Context) {
 		Rows: rows,
 	}
 
-	err = h.service.Import(c.Request.Context(), input)
+	err = h.registrationService.Import(c.Request.Context(), input)
 	if err != nil {
 		c.Error(err).SetMeta("failed to import data")
 		return

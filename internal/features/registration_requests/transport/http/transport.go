@@ -3,11 +3,12 @@ package registration_http_transport
 import (
 	"context"
 
+	"github.com/qandoni/keeneyePractice/internal/core/domain"
 	registration_contracts "github.com/qandoni/keeneyePractice/internal/features/registration_requests/contracts"
 )
 
 type RegistrationRequestsHTTPHandler struct {
-	service RegistrationRequestsService
+	registrationService RegistrationRequestsService
 }
 
 type RegistrationRequestsService interface {
@@ -19,12 +20,17 @@ type RegistrationRequestsService interface {
 		ctx context.Context,
 		input registration_contracts.CompleteInput,
 	) error
+	GetAll(
+		ctx context.Context,
+		limit *int,
+		offset *int,
+	) ([]domain.RegistrationRequest, error)
 }
 
 func NewRegistrationRequestsHTTPHandler(
 	service RegistrationRequestsService,
 ) *RegistrationRequestsHTTPHandler {
 	return &RegistrationRequestsHTTPHandler{
-		service: service,
+		registrationService: service,
 	}
 }

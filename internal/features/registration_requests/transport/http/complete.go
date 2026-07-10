@@ -22,7 +22,7 @@ func (h *RegistrationRequestsHTTPHandler) Complete(c *gin.Context) {
 		return
 	}
 
-	err := h.service.Complete(ctx, registration_contracts.CompleteInput{
+	err := h.registrationService.Complete(ctx, registration_contracts.CompleteInput{
 		Token:    req.Token,
 		Password: req.Password,
 	})
