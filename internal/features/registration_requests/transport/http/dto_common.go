@@ -65,6 +65,7 @@ func RegistrationRequestDTOFromDomain(request domain.RegistrationRequest) Regist
 	return RegistrationRequestDTOResponse{
 		ID:               request.ID,
 		Version:          request.Version,
+		FIO:              request.FIO,
 		Email:            request.Email,
 		PhoneNumber:      request.PhoneNumber,
 		Role:             request.Role,
