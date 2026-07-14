@@ -6,6 +6,7 @@ import (
 	"github.com/qandoni/keeneyePractice/internal/core/domain"
 	"github.com/qandoni/keeneyePractice/internal/core/enum"
 	core_postgres "github.com/qandoni/keeneyePractice/internal/core/repository/postgres"
+	email_retry_service "github.com/qandoni/keeneyePractice/internal/features/email_dispatch/service/email_retry"
 	registration_contracts "github.com/qandoni/keeneyePractice/internal/features/registration_requests/contracts"
 	users_contracts "github.com/qandoni/keeneyePractice/internal/features/users/contracts"
 )
@@ -18,15 +19,15 @@ type RegistrationRequestService struct {
 	teachersService        TeachersService
 	tokenGenerator         TokenGenerator
 	sha256Hasher           Sha256Hasher
-	emailSender            EmailSender
+	emailScheduler         email_retry_service.RetryScheduler
 	txManager              core_postgres.TransactionManager
 }
 
 type RegistrationRequestRepository interface {
 	Create(
 		ctx context.Context,
-		requets domain.RegistrationRequest,
-	) error
+		req domain.RegistrationRequest,
+	) (domain.RegistrationRequest, error)
 	UpdateStatus(
 		ctx context.Context,
 		id int,
@@ -51,10 +52,10 @@ type RegistrationRequestRepository interface {
 	GetRetryableEmailRequests(
 		ctx context.Context,
 	) ([]domain.RegistrationRequest, error)
-}
-
-type EmailSender interface {
-	SendRegistrationEmail(ctx context.Context, to string, subject string, body string) error
+	GetByID(
+		ctx context.Context,
+		id int,
+	) (domain.RegistrationRequest, error)
 }
 
 type GroupsService interface {
@@ -102,7 +103,7 @@ func NewRegistrationRequestsService(
 	teacehrsService TeachersService,
 	tokenGenerator TokenGenerator,
 	sha256Hasher Sha256Hasher,
-	emailSender EmailSender,
+	emailScheduler email_retry_service.RetryScheduler,
 	txManager core_postgres.TransactionManager,
 ) *RegistrationRequestService {
 	return &RegistrationRequestService{
@@ -113,7 +114,7 @@ func NewRegistrationRequestsService(
 		teachersService:        teacehrsService,
 		tokenGenerator:         tokenGenerator,
 		sha256Hasher:           sha256Hasher,
-		emailSender:            emailSender,
+		emailScheduler:         emailScheduler,
 		txManager:              txManager,
 	}
 }

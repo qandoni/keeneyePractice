@@ -3,6 +3,32 @@ export
 
 export PROJECT_ROOT=${shell pwd}
 
+app-deploy:
+	@make env-up 
+	@make myapp-deploy 
+	@make kafka-up 
+
+
+app-undeploy:
+	@make env-down
+	@make myapp-undeploy
+	@make kafka-down
+
+
+kafka-up:
+	@docker compose up -d zookeeper; \
+	docker compose up -d kafka1; \
+	docker compose up -d kafka2; \
+	docker compose up -d kafka3; \
+	docker compose up -d kafka-ui;
+
+kafka-down:
+	@docker compose down zookeeper; \
+	docker compose down kafka1; \
+	docker compose down kafka2; \
+	docker compose down kafka3; \
+	docker compose down kafka-ui;
+
 env-up:
 	@docker compose up -d myapp-postgres
 env-down:
@@ -53,7 +79,10 @@ myapp-run:
 	export POSTGRES_HOST=localhost && \
 	sudo go mod tidy && \
 	go run ${PROJECT_ROOT}/cmd/myapp/main.go
-
+myapp-deploy:
+	@docker compose up -d --build myapp
+myapp-undeploy:
+	@docker compose down myapp
 
 ps:
 	@docker compose ps
