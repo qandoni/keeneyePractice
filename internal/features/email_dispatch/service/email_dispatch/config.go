@@ -1,4 +1,4 @@
-package registration_worker
+package email_dispatch_service
 
 import (
 	"fmt"
@@ -7,9 +7,10 @@ import (
 )
 
 type Config struct {
-	CompleteURL  string `envconfig:"COMPLETE_URL" required:"true"`
-	EmailSubject string `envconfig:"EMAIL_SUBJECT" required:"true"`
-	EmailBody    string `envconfig:"EMAIL_BODY" required:"true"`
+	CompleteURL       string `envconfig:"COMPLETE_URL" required:"true"`
+	EmailSubject      string `envconfig:"EMAIL_SUBJECT" required:"true"`
+	EmailBody         string `envconfig:"EMAIL_BODY" required:"true"`
+	EmailDispatchMode string `envconfig:"EMAIL_DISPATCH_MODE" required:"true"`
 }
 
 func NewConfig() (Config, error) {

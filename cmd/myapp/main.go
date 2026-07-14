@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/gin-gonic/gin"
@@ -22,9 +23,14 @@ import (
 	auth_postgres_repository "github.com/qandoni/keeneyePractice/internal/features/auth/repository/postgres"
 	auth_service "github.com/qandoni/keeneyePractice/internal/features/auth/service"
 	auth_http_transport "github.com/qandoni/keeneyePractice/internal/features/auth/transport/http"
+
+	email_dispatch_service "github.com/qandoni/keeneyePractice/internal/features/email_dispatch/service/email_dispatch"
+	email_retry_service "github.com/qandoni/keeneyePractice/internal/features/email_dispatch/service/email_retry"
+
 	groups_postgres_repository "github.com/qandoni/keeneyePractice/internal/features/groups/repository/postgres"
 	groups_service "github.com/qandoni/keeneyePractice/internal/features/groups/service"
 	groups_http_transport "github.com/qandoni/keeneyePractice/internal/features/groups/transport/http"
+	"github.com/qandoni/keeneyePractice/internal/features/kafka"
 	registration_postgres_repository "github.com/qandoni/keeneyePractice/internal/features/registration_requests/repository/postgres"
 	registration_service "github.com/qandoni/keeneyePractice/internal/features/registration_requests/service"
 	registration_http_transport "github.com/qandoni/keeneyePractice/internal/features/registration_requests/transport/http"
@@ -97,32 +103,60 @@ func main() {
 	passwordHasher := core_password.NewBcryptHasher()
 	logger.Debug("initializing feature", zap.String("feature", "auth"))
 	refreshRepository := auth_postgres_repository.NewRefreshTokensRepository(pool, pool.OpTimeout())
-	refreshGenerator := auth_refresh.NewGenerator()
+	tokenGenerator := auth_refresh.NewGenerator()
 	sha256Hasher := core_password_hash.NewSHA256Hasher()
 	jwtManager := auth_jwt.NewJWTManager("my-secret-key")
-	authService := auth_service.NewAuthService(usersRepository, refreshRepository, passwordHasher, sha256Hasher, jwtManager, refreshGenerator, txManager)
+	authService := auth_service.NewAuthService(usersRepository, refreshRepository, passwordHasher, sha256Hasher, jwtManager, tokenGenerator, txManager)
 	authTransportHTTP := auth_http_transport.NewAuthHTTPHandler(authService)
 
-	emailSender := core_email.NewSMTPSender(core_email.NewConfigMust())
 	logger.Debug("initializing feature", zap.String("feature", "registration_requests"))
 	registrationRequestsRepository := registration_postgres_repository.NewRegistrationRequestsRepository(pool, pool.OpTimeout())
+
+	emailConfig := email_dispatch_service.NewConfigMust()
+	emailSender := core_email.NewSMTPSender(core_email.NewConfigMust())
+	emailDispatchService := email_dispatch_service.NewEmailDispatchService(registrationRequestsRepository, emailSender, tokenGenerator, sha256Hasher, emailConfig)
+
+	var retryScheduler email_retry_service.RetryScheduler
+	switch emailConfig.EmailDispatchMode {
+	case "worker":
+		retryScheduler = email_dispatch_service.NewWorkerRetryScheduler()
+		retryWorker := registration_worker.NewRetryEmailWorker(registrationRequestsRepository, emailDispatchService)
+		go retryWorker.Run(ctx)
+
+	case "kafka":
+		kafkaBrokers := strings.Split(os.Getenv("KAFKA_BROKERS"), ",")
+		kafkaTopic := os.Getenv("KAFKA_TOPIC")
+		retryTopic := os.Getenv("KAFKA_RETRY_TOPIC")
+		deadTopic := os.Getenv("KAFKA_DEAD_TOPIC")
+		producer := kafka.NewProducer(kafkaBrokers, kafkaTopic, retryTopic, deadTopic)
+		defer producer.Close()
+		retryScheduler = email_dispatch_service.NewKafkaRetryScheduler(producer)
+		consumer, err := kafka.NewConsumer(kafkaBrokers, kafkaTopic, "email-group", emailDispatchService, retryScheduler, producer, logger)
+		if err != nil {
+			logger.Error("consumer creation error", zap.Error(err))
+		}
+		retryConsumer, err := kafka.NewRetryConsumer(kafkaBrokers, "emails-retry", "email-retry-group", producer, emailDispatchService, logger)
+		if err != nil {
+			logger.Error("retry consumer creation error", zap.Error(err))
+		}
+		go consumer.Run(ctx)
+		go retryConsumer.Run(ctx)
+	default:
+		panic("unknown dispatch mode")
+	}
+
 	registrationRequestsService := registration_service.NewRegistrationRequestsService(
 		registrationRequestsRepository,
 		groupsService,
 		usersService,
 		studentsService,
 		teachersService,
-		refreshGenerator,
+		tokenGenerator,
 		sha256Hasher,
-		emailSender,
+		retryScheduler,
 		txManager,
 	)
 	registrationRequestsHTTPTransport := registration_http_transport.NewRegistrationRequestsHTTPHandler(registrationRequestsService)
-
-	logger.Debug("initializing retry email send worker")
-	registrationConfig := registration_worker.NewConfigMust()
-	emailWorker := registration_worker.NewRetryEmailWorker(registrationRequestsRepository, emailSender, refreshGenerator, sha256Hasher, registrationConfig)
-	go emailWorker.Run(ctx)
 
 	logger.Debug("initializing HTTP server")
 	server := core_http_server.NewHTTPServer(

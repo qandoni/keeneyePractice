@@ -54,8 +54,12 @@ func (s *RegistrationRequestService) Import(
 				ExpiresAt:        time.Now().Add(24 * time.Hour),
 			}
 
-			if err := s.registrationRepository.Create(ctx, req); err != nil {
-				return fmt.Errorf("create request: %w", err)
+			request, err := s.registrationRepository.Create(ctx, req)
+			if err != nil {
+				return fmt.Errorf("create registration request: %w", err)
+			}
+			if err := s.emailScheduler.ScheduleRegistrationEmail(ctx, request.ID); err != nil {
+				return fmt.Errorf("schedule registration email: %w", err)
 			}
 		}
 
